@@ -11,5 +11,9 @@ class LParentNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::LPARENT, TokenMap.at(SyntaxType::LPARENT));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::LPARENT;
+    }
 };
 #endif //TAYILER_LPARENTNODE_H

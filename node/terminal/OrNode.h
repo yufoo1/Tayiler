@@ -11,5 +11,9 @@ class OrNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::OR, TokenMap.at(SyntaxType::OR));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::OR;
+    }
 };
 #endif //TAYILER_ORNODE_H

@@ -11,5 +11,9 @@ class PlusNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::PLUS, TokenMap.at(SyntaxType::PLUS));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::PLUS;
+    }
 };
 #endif //TAYILER_PLUSNODE_H

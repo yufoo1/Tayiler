@@ -11,5 +11,9 @@ class MinuNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::MINU, TokenMap.at(SyntaxType::MINU));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::MINU;
+    }
 };
 #endif //TAYILER_MINUNODE_H

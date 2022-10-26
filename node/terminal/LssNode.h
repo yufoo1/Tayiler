@@ -11,5 +11,9 @@ class LssNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::LSS, TokenMap.at(SyntaxType::LSS));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::LSS;
+    }
 };
 #endif //TAYILER_LSSNODE_H

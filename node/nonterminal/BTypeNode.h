@@ -11,5 +11,14 @@ class BTypeNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
 //        parserList->emplace_back(SyntaxType::BTYPE, SyntaxType2String.at(SyntaxType::NONE));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::BTYPE;
+    }
+
+    void insertNode(Node* node) override {
+        assert(child == nullptr);
+        child = node;
+    }
 };
 #endif //TAYILER_BTYPENODE_H

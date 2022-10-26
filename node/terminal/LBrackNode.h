@@ -11,5 +11,9 @@ class LBrackNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::LBRACK, TokenMap.at(SyntaxType::LBRACK));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::LBRACK;
+    }
 };
 #endif //TAYILER_LBRACKNODE_H

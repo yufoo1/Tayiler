@@ -11,5 +11,9 @@ class DivNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::DIV, TokenMap.at(SyntaxType::DIV));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::DIV;
+    }
 };
 #endif //TAYILER_DIVNODE_H

@@ -11,5 +11,9 @@ class RParentNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::RPARENT, TokenMap.at(SyntaxType::RPARENT));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::RPARENT;
+    }
 };
 #endif //TAYILER_RPARENTNODE_H

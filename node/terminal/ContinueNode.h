@@ -11,5 +11,9 @@ class ContinueNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::CONTINUETK, "continue");
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::CONTINUETK;
+    }
 };
 #endif //TAYILER_CONTINUENODE_H

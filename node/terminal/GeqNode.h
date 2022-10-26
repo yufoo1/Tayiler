@@ -11,5 +11,9 @@ class GeqNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::GEQ, TokenMap.at(SyntaxType::GEQ));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::GEQ;
+    }
 };
 #endif //TAYILER_GEQNODE_H

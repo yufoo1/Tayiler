@@ -11,5 +11,9 @@ class LBraceNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::LBRACE, TokenMap.at(SyntaxType::LBRACE));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::LBRACE;
+    }
 };
 #endif //TAYILER_LBRACENODE_H

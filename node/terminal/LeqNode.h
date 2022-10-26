@@ -11,5 +11,9 @@ class LeqNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::LEQ, TokenMap.at(SyntaxType::LEQ));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::LEQ;
+    }
 };
 #endif //TAYILER_LEQNODE_H

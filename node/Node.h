@@ -7,18 +7,27 @@
 #include "vector"
 #include "tuple"
 #include <fstream>
+#include <utility>
 #include "../parser/ParseCursor.h"
 #include "iostream"
 #include "../lexer/SyntaxType.h"
+#include "../parser/SyntaxTree.h"
 
 using namespace std;
 class Node {
 protected:
-    vector<Node*> nodes;
+    Node* child = nullptr;
+private:
+    string val;
 public:
+    explicit Node() { }
 
-    void insertNodes(Node* node) {
-        nodes.insert(nodes.begin(), node);
+    explicit Node(string val) {
+        this->val = move(val);
+    }
+
+    string getVal() {
+        return val;
     }
 
     virtual void insertList(vector<tuple<SyntaxType, string>>* parserList, string val) {
@@ -27,6 +36,16 @@ public:
 
     virtual void insertList(vector<tuple<SyntaxType, string>>* parserList) {
         cout << "This method should be override!" << "\n";
+    }
+
+    virtual SyntaxType getType() {
+        cout << "This method should be override!" << "\n";
+    }
+
+    virtual void insertNode(Node* node) { }
+
+    Node* getChild() {
+        return child;
     }
 
 };

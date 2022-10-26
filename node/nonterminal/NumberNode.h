@@ -11,5 +11,14 @@ class NumberNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::NUMBER, SyntaxType2String.at(SyntaxType::NONE));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::NUMBER;
+    }
+
+    void insertNode(Node* node) override {
+        assert(child == nullptr);
+        child = node;
+    }
 };
 #endif //TAYILER_NUMBERNODE_H

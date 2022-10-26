@@ -11,5 +11,9 @@ class PrintfNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::PRINTFTK, "printf");
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::PRINTFTK;
+    }
 };
 #endif //TAYILER_PRINTFNODE_H

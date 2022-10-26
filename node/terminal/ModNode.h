@@ -11,5 +11,9 @@ class ModNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::MOD, TokenMap.at(SyntaxType::MOD));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::MOD;
+    }
 };
 #endif //TAYILER_MODNODE_H

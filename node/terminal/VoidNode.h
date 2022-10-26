@@ -11,5 +11,9 @@ class VoidNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::VOIDTK, "void");
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::VOIDTK;
+    }
 };
 #endif //TAYILER_VOIDNODE_H

@@ -11,5 +11,9 @@ class IntNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::INTTK, "int");
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::INTTK;
+    }
 };
 #endif //TAYILER_INTNODE_H

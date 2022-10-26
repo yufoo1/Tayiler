@@ -11,5 +11,9 @@ class WhileNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::WHILETK, "while");
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::WHILETK;
+    }
 };
 #endif //TAYILER_WHILENODE_H

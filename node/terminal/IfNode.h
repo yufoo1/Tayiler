@@ -11,5 +11,9 @@ class IfNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::IFTK, "if");
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::IFTK;
+    }
 };
 #endif //TAYILER_IFNODE_H

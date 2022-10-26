@@ -11,5 +11,9 @@ class AndNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::AND, TokenMap.at(SyntaxType::AND));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::AND;
+    }
 };
 #endif //TAYILER_ANDNODE_H

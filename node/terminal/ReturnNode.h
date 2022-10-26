@@ -11,5 +11,9 @@ class ReturnNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::RETURNTK, "return");
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::RETURNTK;
+    }
 };
 #endif //TAYILER_RETURNNODE_H

@@ -11,5 +11,9 @@ class ElseNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::ELSETK, "else");
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::ELSETK;
+    }
 };
 #endif //TAYILER_ELSENODE_H

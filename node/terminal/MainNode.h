@@ -11,5 +11,9 @@ class MainNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::MAINTK, "main");
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::MAINTK;
+    }
 };
 #endif //TAYILER_MAINNODE_H

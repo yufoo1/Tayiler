@@ -8,8 +8,15 @@
 #include "../Node.h"
 
 class IdentNode: public Node {
+public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList, string val) override {
         parserList->emplace_back(SyntaxType::IDENFR, val);
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::IDENFR;
+    }
+
+    using Node::Node;
 };
 #endif //TAYILER_IDENTNODE_H

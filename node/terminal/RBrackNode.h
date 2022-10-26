@@ -11,5 +11,9 @@ class RBrackNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::RBRACK, TokenMap.at(SyntaxType::RBRACK));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::RBRACK;
+    }
 };
 #endif //TAYILER_RBRACKNODE_H

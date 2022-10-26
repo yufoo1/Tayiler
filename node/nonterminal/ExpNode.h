@@ -11,5 +11,14 @@ class ExpNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::EXP, SyntaxType2String.at(SyntaxType::NONE));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::EXP;
+    }
+
+    void insertNode(Node* node) override {
+        assert(child == nullptr);
+        child = node;
+    }
 };
 #endif //TAYILER_EXPNODE_H

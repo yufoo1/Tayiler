@@ -11,5 +11,9 @@ class GreNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::GRE, TokenMap.at(SyntaxType::GRE));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::GRE;
+    }
 };
 #endif //TAYILER_GRENODE_H

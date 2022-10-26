@@ -11,5 +11,14 @@ class DeclNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
 //        parserList->emplace_back(SyntaxType::DECL, SyntaxType2String.at(SyntaxType::NONE));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::DECL;
+    }
+
+    void insertNode(Node* node) override {
+        assert(child == nullptr);
+        child = node;
+    }
 };
 #endif //TAYILER_DECLNODE_H

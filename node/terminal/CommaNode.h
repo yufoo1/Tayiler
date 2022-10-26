@@ -11,5 +11,9 @@ class CommaNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::COMMA, TokenMap.at(SyntaxType::COMMA));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::COMMA;
+    }
 };
 #endif //TAYILER_COMMANODE_H

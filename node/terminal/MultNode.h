@@ -11,5 +11,9 @@ class MultNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::MULT, TokenMap.at(SyntaxType::MULT));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::MULT;
+    }
 };
 #endif //TAYILER_MULTNODE_H

@@ -11,5 +11,9 @@ class ConstNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::CONSTTK, "const");
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::CONSTTK;
+    }
 };
 #endif //TAYILER_CONSTNODE_H

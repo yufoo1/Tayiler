@@ -11,5 +11,9 @@ class NotNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::NOT, TokenMap.at(SyntaxType::NOT));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::NOT;
+    }
 };
 #endif //TAYILER_NOTNODE_H

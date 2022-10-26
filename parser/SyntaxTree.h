@@ -27,7 +27,6 @@
 #include "../node/nonterminal/FuncRParamsNode.h"
 #include "../node/terminal/IdentNode.h"
 #include "../node/nonterminal/InitValNode.h"
-#include "../node/nonterminal/IntConstNode.h"
 #include "../node/nonterminal/LAndExpNode.h"
 #include "../node/nonterminal/LOrExpNode.h"
 #include "../node/nonterminal/LValNode.h"

@@ -9,6 +9,7 @@
 #include "map"
 
 enum class SyntaxType {
+    NONE,
     IDENFR, INTCON, STRCON,
     MAINTK, INTTK, VOIDTK, CONSTTK, BREAKTK, CONTINUETK, IFTK, ELSETK, WHILETK, RETURNTK,  GETINTTK, PRINTFTK,
     NOT, AND, OR, PLUS, MINU, MULT, DIV, MOD, LSS, LEQ, GRE, GEQ, EQL, NEQ, ASSIGN,
@@ -17,8 +18,10 @@ enum class SyntaxType {
     ADDCONSTEXP, ADDEXP, BLOCKITEM, BLOCK, BTYPE, COMPUNIT, COND, CONSTDECL, CONSTDEF, CONSTEXP, CONSTINITVAL, DECL,
     EQEXP, EXP, FUNCDEF, FUNCFPARAM, FUNCFPARAMS, FUNCRPARAMS, FUNCTYPE, INITVAL, INTCONST,
     LANDEXP, LOREXP, LVAL, MAINFUNCDEF, MULEXP, NUMBER, PRIMARYEXP, RELEXP, STMT, UNARYEXP, UNARYOP, VARDECL, VARDEF,
+};
 
-    NONE
+enum class StmtType {
+    NONE, BLOCK, BREAK, CONTINUE, EXP, GETINT, IF, LVALASSIGN, PRINTF, RETURN, WHILE, SEMICN
 };
 
 std::map<std::string, SyntaxType> ReservedWordMap = {
@@ -78,6 +81,7 @@ std::map<SyntaxType, std::string> TokenMap = {
 };
 
 std::map<SyntaxType, std::string> SyntaxType2String = {
+        {SyntaxType::NONE, "NONE"},
         {SyntaxType::IDENFR, "IDENFR"},
         {SyntaxType::INTCON, "INTCON"},
         {SyntaxType::STRCON, "STRCON"},
@@ -150,8 +154,7 @@ std::map<SyntaxType, std::string> SyntaxType2String = {
         {SyntaxType::UNARYOP, "UnaryOp"},
         {SyntaxType::VARDECL, "VarDecl"},
         {SyntaxType::VARDEF, "VarDef"},
-
-        {SyntaxType::NONE, "NONE"}
 };
+
 
 #endif //TAYILER_SYNTAXTYPE_H

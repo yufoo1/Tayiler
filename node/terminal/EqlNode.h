@@ -11,5 +11,9 @@ class EqlNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::EQL, TokenMap.at(SyntaxType::EQL));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::EQL;
+    }
 };
 #endif //TAYILER_EQLNODE_H

@@ -11,5 +11,11 @@ class IntConNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList, string val) override {
         parserList->emplace_back(SyntaxType::INTCON, val);
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::INTCON;
+    }
+
+    using Node::Node;
 };
 #endif //TAYILER_INTCONNODE_H

@@ -11,5 +11,14 @@ class BlockItemNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
 //        parserList->emplace_back(SyntaxType::BLOCKITEM, SyntaxType2String.at(SyntaxType::NONE));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::BLOCKITEM;
+    }
+
+    void insertNode(Node* node) override {
+        assert(child == nullptr);
+        child = node;
+    }
 };
 #endif //TAYILER_BLOCKITEMNODE_H

@@ -8,8 +8,26 @@
 #include "../Node.h"
 
 class MainFuncDefNode: public Node {
+private:
+    Node* block = nullptr;
+public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::MAINFUNCDEF, SyntaxType2String.at(SyntaxType::NONE));
+    }
+
+    SyntaxType getType() override {
+        return SyntaxType::MAINFUNCDEF;
+    }
+
+    void insertNode(Node *node) override {
+        switch (node->getType()) {
+            case SyntaxType::BLOCK: assert(block == nullptr), block = node; break;
+            default: break;
+        }
+    }
+
+    Node* getBlock() {
+        return block;
     }
 };
 #endif //TAYILER_MAINFUNCDEFNODE_H

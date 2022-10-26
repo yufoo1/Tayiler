@@ -11,5 +11,9 @@ class AssignNode: public Node {
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::ASSIGN, TokenMap.at(SyntaxType::ASSIGN));
     }
+
+    SyntaxType getType() override {
+        return SyntaxType::ASSIGN;
+    }
 };
 #endif //TAYILER_ASSIGNNODE_H
