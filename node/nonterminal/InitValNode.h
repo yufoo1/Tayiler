@@ -28,8 +28,8 @@ public:
         }
     }
 
-    Node* getExp() {
-        return exp;
+    ExpNode* getExp() {
+        return dynamic_cast<ExpNode *>(exp);
     }
 
     vector<Node*> getInitVals() {

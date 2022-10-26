@@ -31,16 +31,16 @@ public:
         }
     }
 
-    Node* getPrimaryExp() {
-        return primaryExp;
+    PrimaryExpNode* getPrimaryExp() {
+        return dynamic_cast<PrimaryExpNode *>(primaryExp);
     }
 
     string* getIdent() {
         return ident;
     }
 
-    Node* getFuuncRParams() {
-        return funcRParams;
+    FuncRParamsNode* getFuuncRParams() {
+        return dynamic_cast<FuncRParamsNode *>(funcRParams);
     }
 };
 #endif //TAYILER_UNARYEXPNODE_H

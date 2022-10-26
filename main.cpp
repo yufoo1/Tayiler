@@ -6,5 +6,6 @@ int main() {
     const char* inputFile = "../testfile.txt", * outputFile = "../output.txt";
     Lexer lexer(inputFile, outputFile);
     Parser parser(lexer.getLexerList(), outputFile);
+    Visitor visitor(parser.getSyntaxTreeRoot());
     return 0;
 }

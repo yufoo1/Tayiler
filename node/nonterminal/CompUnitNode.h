@@ -6,6 +6,7 @@
 #define TAYILER_COMPUNITNODE_H
 
 #include "../Node.h"
+#include "MainFuncDefNode.h"
 
 class CompUnitNode: public Node {
 private:
@@ -38,8 +39,8 @@ public:
         return funcDefs;
     }
 
-    Node* getMainFuncDef() {
-        return mainFuncDef;
+    MainFuncDefNode* getMainFuncDef() {
+        return dynamic_cast<MainFuncDefNode *>(mainFuncDef);
     }
 
 };

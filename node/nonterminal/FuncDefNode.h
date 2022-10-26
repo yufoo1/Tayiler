@@ -6,6 +6,8 @@
 #define TAYILER_FUNCDEFNODE_H
 
 #include "../Node.h"
+#include "FuncTypeNode.h"
+#include "FuncFParamsNode.h"
 
 class FuncDefNode: public Node{
 private:
@@ -30,16 +32,16 @@ public:
         }
     }
 
-    Node* getFuncType() {
-        return funcType;
+    FuncTypeNode* getFuncType() {
+        return dynamic_cast<FuncTypeNode *>(funcType);
     }
 
     string* getIdent() {
         return ident;
     }
 
-    Node* getFunFParams() {
-        return funcFParams;
+    FuncFParamsNode* getFunFParams() {
+        return dynamic_cast<FuncFParamsNode *>(funcFParams);
     }
 };
 #endif //TAYILER_FUNCDEFNODE_H

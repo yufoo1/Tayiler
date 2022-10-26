@@ -28,8 +28,8 @@ public:
         }
     }
 
-    Node* getBType() {
-        return bType;
+    BTypeNode* getBType() {
+        return dynamic_cast<BTypeNode *>(bType);
     }
 
     vector<Node*> getConstDefs() {

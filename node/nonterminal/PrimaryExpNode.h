@@ -29,16 +29,16 @@ private:
         }
     }
 
-    Node* getExp() {
-        return exp;
+    ExpNode* getExp() {
+        return dynamic_cast<ExpNode *>(exp);
     }
 
-    Node* getLVal() {
-        return lVal;
+    LValNode* getLVal() {
+        return dynamic_cast<LValNode *>(lVal);
     }
 
-    Node* getNumber() {
-        return number;
+    NumberNode* getNumber() {
+        return dynamic_cast<NumberNode *>(number);
     }
 };
 #endif //TAYILER_PRIMARYEXPNODE_H

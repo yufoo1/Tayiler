@@ -37,8 +37,8 @@ private:
         return constExps;
     }
 
-    Node* getConstInitVal() {
-        return constInitVal;
+    ConstInitValNode* getConstInitVal() {
+        return dynamic_cast<ConstInitValNode *>(constInitVal);
     }
 };
 #endif //TAYILER_VARDEFNODE_H

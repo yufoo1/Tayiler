@@ -6,6 +6,7 @@
 #define TAYILER_MAINFUNCDEFNODE_H
 
 #include "../Node.h"
+#include "BlockNode.h"
 
 class MainFuncDefNode: public Node {
 private:
@@ -26,8 +27,8 @@ public:
         }
     }
 
-    Node* getBlock() {
-        return block;
+    BlockNode* getBlock() {
+        return dynamic_cast<BlockNode *>(block);
     }
 };
 #endif //TAYILER_MAINFUNCDEFNODE_H

@@ -6,6 +6,7 @@
 #define TAYILER_CONSTINITVALNODE_H
 
 #include "../Node.h"
+#include "ConstExpNode.h"
 
 class ConstInitValNode: public Node {
 private:
@@ -28,8 +29,8 @@ public:
         }
     }
 
-    Node* getConstExp() {
-        return constExp;
+    ConstExpNode* getConstExp() {
+        return dynamic_cast<ConstExpNode *>(constExp);
     }
 
     vector<Node*> getConstInitVals() {

@@ -608,5 +608,9 @@ public:
         genNode(root, SyntaxType::COMPUNIT);
         fileWrite(outputFile);
     }
+
+    Node* getSyntaxTreeRoot() {
+        return syntaxTree->getRoot();
+    }
 };
 #endif //TAYILER_PARSER_H

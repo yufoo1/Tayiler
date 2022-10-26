@@ -10,7 +10,7 @@
 
 class Visitor {
 public:
-    Visitor() {
+    Visitor(Node* root) {
         manage = new Manager;
     }
 
@@ -18,31 +18,26 @@ private:
     Manager* manage;
 
     void visitAst(Node* root) {
-        visitCompUnit(root);
+        visitCompUnit(dynamic_cast<CompUnitNode *>(root));
     }
 
-    void visitCompUnit(Node* node) {
-//        for (auto i : node->getNodes()) {
-//            switch (i->getType()) {
-//                case SyntaxType::DECL: visitDecl(i); break;
-//                case SyntaxType::FUNCDEF: visitFuncDef(i); break;
-//                case SyntaxType::MAINFUNCDEF: visitMainFuncDef(i); break;
-//                default: error(); break;
-//            }
-//        }
+    void visitCompUnit(CompUnitNode* node) {
+        for (auto i : (node->getDeclVec())) visitDecl(dynamic_cast<DeclNode *>(i));
+        for (auto i : (node->getFuncDefVec())) visitFuncDef(dynamic_cast<FuncDefNode *>(i));
+        visitMainFuncDef(node->getMainFuncDef());
     }
 
-    void visitDecl(Node* node) {
+    void visitDecl(DeclNode* node) {
 
     }
 
-    void visitFuncDef(Node* node) {
+    void visitFuncDef(FuncDefNode* node) {
 
         string ident = node->getVal();
     }
 
-    void visitMainFuncDef(Node* node) {
-
+    void visitMainFuncDef(MainFuncDefNode* node) {
+        node->getBlock();
     }
 
 
