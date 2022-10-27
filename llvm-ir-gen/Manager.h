@@ -6,19 +6,35 @@
 #define TAYILER_MANAGER_H
 
 
-#include "Symble/SymbleTable.h"
+#include "symbol/SymbolTable.h"
+#include "llvm-ir/Function.h"
 
 class Manager {
 public:
-    Manager() {
-
+    explicit Manager() {
     }
 
-    SymbleTable getSymbleTable() {
-        return symbleTable;
+    SymbolTable getSymbolTable() {
+        return symbolTable;
+    }
+
+    void addFunction(Function* function) {
+        functions.insert({function->getIdent(), function});
+    }
+
+    void outputLLVM(const char *outputFile) {
+        ofstream f(outputFile);
+        for (auto i : functions) {
+            if (i.second->hasEntry()) {
+                f << i.second->getOutputString() << endl;
+                cout << i.second->getOutputString() << endl;
+            }
+        }
+        f.close();
     }
 
 private:
-    SymbleTable symbleTable;
+    SymbolTable symbolTable = SymbolTable(nullptr);
+    map<string, Function*> functions;
 };
 #endif //TAYILER_MANAGER_H

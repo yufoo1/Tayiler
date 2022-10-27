@@ -10,7 +10,8 @@
 class StmtNode: public Node {
 private:
     Node* cond = nullptr, *lVal = nullptr, *block = nullptr;
-    vector<Node*> stmts, exp;
+    vector<ExpNode*> exps;
+    vector<StmtNode *> stmts;
     string* formatString = nullptr;
     StmtType stmtType = StmtType::NONE;
 public:
@@ -20,6 +21,10 @@ public:
 
     SyntaxType getType() override {
         return SyntaxType::STMT;
+    }
+
+    StmtType getStmtType() {
+        return stmtType;
     }
 
     void insertNode(Node *node) override {
@@ -34,12 +39,36 @@ public:
             case SyntaxType::COND: assert(cond == nullptr), cond = node; break;
             case SyntaxType::BLOCK: assert(cond == nullptr), block = node; stmtType = StmtType::BLOCK; break;
             case SyntaxType::LVAL: assert(lVal == nullptr), lVal = node; stmtType = StmtType::LVALASSIGN; break;
-            case SyntaxType::STMT: stmts.emplace_back(node);
-            case SyntaxType::EXP: exp.emplace_back(node); stmtType = stmtType == StmtType::NONE ? StmtType::EXP : stmtType; break;
+            case SyntaxType::STMT: stmts.emplace_back(dynamic_cast<StmtNode *>(node));
+            case SyntaxType::EXP: exps.emplace_back(dynamic_cast<ExpNode *>(node)); stmtType = stmtType == StmtType::NONE ? StmtType::EXP : stmtType; break;
             case SyntaxType::SEMICN: stmtType = stmtType == StmtType::NONE ? StmtType::SEMICN : stmtType; break;
             case SyntaxType::STRCON: assert(formatString == nullptr), *formatString = node->getVal(); break;
             default: break;
         }
+    }
+
+    CondNode* getCond() {
+        return dynamic_cast<CondNode *>(cond);
+    }
+
+    LValNode* getLVal() {
+        return dynamic_cast<LValNode *>(lVal);
+    }
+
+    BlockNode* getBlock() {
+        return dynamic_cast<BlockNode *>(block);
+    }
+
+    vector<StmtNode*> getStmts() {
+        return stmts;
+    }
+
+    vector<ExpNode*> getExps() {
+        return exps;
+    }
+
+    string getFormatString() {
+        return *formatString;
     }
 };
 #endif //TAYILER_STMTNODE_H

@@ -519,7 +519,7 @@ private:
             case SyntaxType::LOREXP: node = new LOrExpNode, lOrExp(node); break;
             case SyntaxType::LVAL: node = new LValNode, lVal(node); break;
             case SyntaxType::MAINFUNCDEF: node = new MainFuncDefNode, mainFuncDef(node); break;
-            case SyntaxType::MULEXP: node = new MulExp, mulExp(node); break;
+            case SyntaxType::MULEXP: node = new MulExpNode, mulExp(node); break;
             case SyntaxType::NUMBER: node = new NumberNode, number(node); break;
             case SyntaxType::PRIMARYEXP: node = new PrimaryExpNode, primaryExp(node); break;
             case SyntaxType::RELEXP: node = new RelExpNode, relExp(node); break;
@@ -566,9 +566,9 @@ private:
             case SyntaxType::VOIDTK: node = new VoidNode, cursor->next(); break;
             case SyntaxType::WHILETK: node = new WhileNode, cursor->next(); break;
 
-            case SyntaxType::IDENFR: node = new IdentNode(get<1>(cursor->getNthNode(0))), ident(node), cursor->next(); return;
-            case SyntaxType::STRCON: node = new StrConNode(get<1>(cursor->getNthNode(0))), formatString(node), cursor->next(); return;
-            case SyntaxType::INTCON: node = new IntConNode(get<1>(cursor->getNthNode(0))), intConst(node), cursor->next(); return;
+            case SyntaxType::IDENFR: node = new IdentNode(get<1>(cursor->getNthNode(0))), ident(node), curNode->insertNode(node), cursor->next(); return;
+            case SyntaxType::STRCON: node = new StrConNode(get<1>(cursor->getNthNode(0))), formatString(node), curNode->insertNode(node), cursor->next(); return;
+            case SyntaxType::INTCON: node = new IntConNode(get<1>(cursor->getNthNode(0))), intConst(node), curNode->insertNode(node), cursor->next(); return;
             default: error(); return;
         }
         curNode->insertNode(node);

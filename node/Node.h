@@ -40,9 +40,12 @@ public:
 
     virtual SyntaxType getType() {
         cout << "This method should be override!" << "\n";
+        return SyntaxType::NONE;
     }
 
-    virtual void insertNode(Node* node) { }
+    virtual void insertNode(Node* node) {
+        child = node;
+    }
 
     Node* getChild() {
         return child;

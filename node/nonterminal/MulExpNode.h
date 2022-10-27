@@ -7,7 +7,7 @@
 
 #include "../Node.h"
 
-class MulExp: public Node {
+class MulExpNode: public Node {
 private:
     vector<SyntaxType> ops;
     vector<Node*> unaryExps;

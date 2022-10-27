@@ -12,6 +12,7 @@ private:
     Node* exp = nullptr;
     Node* lVal = nullptr;
     Node* number = nullptr;
+public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::PRIMARYEXP, SyntaxType2String.at(SyntaxType::NONE));
     }

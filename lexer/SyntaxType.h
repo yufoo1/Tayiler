@@ -24,6 +24,15 @@ enum class StmtType {
     NONE, BLOCK, BREAK, CONTINUE, EXP, GETINT, IF, LVALASSIGN, PRINTF, RETURN, WHILE, SEMICN
 };
 
+enum class FuncType {
+    INT1, INT32
+};
+
+std::map<FuncType, std::string> FuncType2String = {
+        {FuncType::INT1, "i1"},
+        {FuncType::INT32, "i32"},
+};
+
 std::map<std::string, SyntaxType> ReservedWordMap = {
         {"main", SyntaxType::MAINTK},
         {"const", SyntaxType::CONSTTK},
