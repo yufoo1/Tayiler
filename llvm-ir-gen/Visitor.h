@@ -24,6 +24,7 @@ private:
     Manager* manager;
     BasicBlock* curBasicBlock;
     SymbolTable* curSymbolTable;
+    map<string, AllocaInstr*> ident2AllocaInstr; /* TODO  merge into SymbolTable */
     Function* curFunction;
 
     void visitAst(Node* root) {
@@ -114,7 +115,7 @@ private:
     }
 
     Value* visitLVal(LValNode* node) {
-//        return curSymbolTable->getSymbolTerm(node->getIdent())->getAllocaInstr();
+        return ident2AllocaInstr.at(node->getIdent());
     }
 
     void visitIfStmt(StmtNode* node) {
@@ -167,6 +168,7 @@ private:
     void visitVarDef(VarDefNode* node, FuncType type) {
         /* TODO: without array */
         AllocaInstr* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, false);
+        ident2AllocaInstr.insert({allocInstr->getIdent(), allocInstr});
         if (node->getInitVal() != nullptr) {
             new StoreInstr(curBasicBlock, allocInstr, visitInitVal(node->getInitVal()));
         }
@@ -248,16 +250,12 @@ private:
         if (node->getExp() != nullptr) {
             return visitExp(node->getExp());
         } else if (node->getLVal() != nullptr) {
-            return visitLValExp(node->getLVal());
+            return visitLVal(node->getLVal());
         } else if (node->getNumber() != nullptr) {
             return visitNumber(node->getNumber());
         } else {
             error(); return {};
         }
-    }
-
-    Value* visitLValExp(LValNode* node) {
-
     }
 
     Value* visitNumber(NumberNode* node) {

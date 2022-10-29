@@ -9,7 +9,7 @@
 
 class LValNode: public Node {
 private:
-    string ident = nullptr;
+    string ident;
     vector<Node*> exps;
 public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {

@@ -16,11 +16,16 @@ public:
     explicit CallInstr(BasicBlock* parent, Value* val, CallInstrType type) {
         this->use = new Use(val);
         this->type = type;
+        switch (type) {
+            case CallInstrType::GETINT: setFuncType(FuncType::INT32); break;
+            default: break;
+        }
         parent->addInstr(this);
     }
 
-    std::string toString() override {
-//        return "call " + FuncType2String.at(this->getFuncType()) + " @" + CallInstrType2String.at(type) + "(" + use->getValue()->getFuncType() + " " + use->getValue()->getVal() + ")";
+    string toString() override {
+        return "call " + FuncType2String.at(this->getFuncType()) + " @" + CallInstrType2String.at(type) + "(" +
+        FuncType2String.at(use->getValue()->getFuncType()) + " " + use->getValue()->getVal() + ")";
     }
 };
 #endif //TAYILER_CALLINSTR_H
