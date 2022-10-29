@@ -14,12 +14,10 @@ public:
     explicit ReturnInstr(BasicBlock* parent, Value* retValue) {
         retUse = new Use(retValue);
         parent->addInstr(this);
-        this->setValueType(ValueType::RETURNINSTR);
     }
 
     explicit ReturnInstr(BasicBlock* parent) {
         parent->addInstr(this);
-        this->setValueType(ValueType::RETURNINSTR);
     }
 
     std::string toString() override {

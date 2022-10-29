@@ -5,14 +5,11 @@
 #ifndef TAYILER_INSTR_H
 #define TAYILER_INSTR_H
 
-#include "../Value.h"
-#include "../BasicBlock.h"
 #include "../Use.h"
 static string LOCAL_PREFIX = "%";
 static string LOCAL_NAME_PREFIX = "v";
 static int LOCAL_INSTR_CNT = 0;
 
-class BasicBlock;
 
 class Instr: public Value {
 public:
@@ -21,6 +18,12 @@ public:
     virtual string toString() override { }
 
     virtual bool hasValue() { }
+
+protected:
+
+    void genInstrVal() {
+        setVal(LOCAL_PREFIX + LOCAL_NAME_PREFIX + to_string(LOCAL_INSTR_CNT++));
+    }
 };
 
 #endif //TAYILER_INSTR_H

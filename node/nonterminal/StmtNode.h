@@ -12,7 +12,7 @@ private:
     Node* cond = nullptr, *lVal = nullptr, *block = nullptr;
     vector<ExpNode*> exps;
     vector<StmtNode *> stmts;
-    string* formatString = nullptr;
+    string formatString;
     StmtType stmtType = StmtType::NONE;
 public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
@@ -42,7 +42,7 @@ public:
             case SyntaxType::STMT: stmts.emplace_back(dynamic_cast<StmtNode *>(node));
             case SyntaxType::EXP: exps.emplace_back(dynamic_cast<ExpNode *>(node)); stmtType = stmtType == StmtType::NONE ? StmtType::EXP : stmtType; break;
             case SyntaxType::SEMICN: stmtType = stmtType == StmtType::NONE ? StmtType::SEMICN : stmtType; break;
-            case SyntaxType::STRCON: assert(formatString == nullptr), *formatString = node->getVal(); break;
+            case SyntaxType::STRCON: assert(formatString.empty()), formatString = node->getVal(); break;
             default: break;
         }
     }
@@ -68,7 +68,7 @@ public:
     }
 
     string getFormatString() {
-        return *formatString;
+        return formatString;
     }
 };
 #endif //TAYILER_STMTNODE_H

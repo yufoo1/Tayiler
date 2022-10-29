@@ -17,7 +17,6 @@ public:
         setIntVal(stoi(val));
         setVal(val);
         setFuncType(FuncType::INT32);
-        setValueType(ValueType::CONSTANTINT);
     }
 
     int getIntVal() {

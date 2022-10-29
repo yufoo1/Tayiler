@@ -5,15 +5,11 @@
 #ifndef TAYILER_VALUE_H
 #define TAYILER_VALUE_H
 #include "set"
-enum class ValueType {
-    ALUINSTR, RETURNINSTR, CONSTANTINT
-};
 
 class Value {
 private:
     FuncType funcType;
     string val;
-    ValueType valueType;
 public:
     Value(FuncType type) {
         this->funcType = type;
@@ -43,16 +39,8 @@ public:
         this->funcType = type;
     }
 
-    void setValueType(ValueType type) {
-        this->valueType = type;
-    }
-
     FuncType getFuncType() {
         return funcType;
-    }
-
-    ValueType getValueType() {
-        return valueType;
     }
 
     virtual string getValueString() { }

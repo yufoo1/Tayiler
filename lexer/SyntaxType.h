@@ -24,13 +24,25 @@ enum class StmtType {
     NONE, BLOCK, BREAK, CONTINUE, EXP, GETINT, IF, LVALASSIGN, PRINTF, RETURN, WHILE, SEMICN
 };
 
+enum class CallInstrType {
+    NONE, GETINT, PUTINT, PUTCH, PUTSTR
+};
+
+std::map<CallInstrType, std::string> CallInstrType2String = {
+        {CallInstrType::GETINT, "getint"},
+        {CallInstrType::PUTINT, "putint"},
+        {CallInstrType::PUTCH,  "putch"},
+        {CallInstrType::PUTSTR, "putstr"},
+};
+
 enum class FuncType {
-    INT1, INT32
+    INT1, INT32, VOID
 };
 
 std::map<FuncType, std::string> FuncType2String = {
         {FuncType::INT1, "i1"},
         {FuncType::INT32, "i32"},
+        {FuncType::VOID, "void"},
 };
 
 std::map<std::string, SyntaxType> ReservedWordMap = {

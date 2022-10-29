@@ -9,9 +9,10 @@
 
 class VarDefNode: public Node {
 private:
-    string* ident = nullptr;
+    string ident;
     vector<Node*> constExps;
-    Node* constInitVal = nullptr;
+    Node* initVal = nullptr;
+public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::VARDEF, SyntaxType2String.at(SyntaxType::NONE));
     }
@@ -22,14 +23,14 @@ private:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::IDENFR: assert(ident == nullptr), *ident = node->getVal(); break;
+            case SyntaxType::IDENFR: assert(ident.empty()), ident = node->getVal(); break;
             case SyntaxType::CONSTEXP: constExps.emplace_back(node); break;
-            case SyntaxType::CONSTINITVAL: assert(constInitVal == nullptr), constInitVal = node; break;
+            case SyntaxType::INITVAL: assert(initVal == nullptr), initVal = node; break;
             default: break;
         }
     }
 
-    string* getIdent() {
+    string getIdent() {
         return ident;
     }
 
@@ -37,8 +38,8 @@ private:
         return constExps;
     }
 
-    ConstInitValNode* getConstInitVal() {
-        return dynamic_cast<ConstInitValNode *>(constInitVal);
+    InitValNode* getInitVal() {
+        return dynamic_cast<InitValNode *>(initVal);
     }
 };
 #endif //TAYILER_VARDEFNODE_H

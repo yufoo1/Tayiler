@@ -12,7 +12,7 @@
 class FuncDefNode: public Node{
 private:
     Node* funcType = nullptr;
-    string* ident = nullptr;
+    string ident = nullptr;
     Node* funcFParams = nullptr;
 public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
@@ -26,7 +26,7 @@ public:
     void insertNode(Node* node) override {
         switch (node->getType()) {
             case SyntaxType::FUNCTYPE: assert(funcType == nullptr), funcType = node; break;
-            case SyntaxType::IDENFR: assert(ident == nullptr), *ident = node->getVal(); break;
+            case SyntaxType::IDENFR: assert(ident.empty()), ident = node->getVal(); break;
             case SyntaxType::FUNCFPARAMS: assert(funcFParams == nullptr), funcFParams = node; break;
             default: break;
         }
@@ -36,7 +36,7 @@ public:
         return dynamic_cast<FuncTypeNode *>(funcType);
     }
 
-    string* getIdent() {
+    string getIdent() {
         return ident;
     }
 

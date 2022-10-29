@@ -7,13 +7,10 @@
 
 #include "../node/Node.h"
 #include "Manager.h"
-#include "llvm-ir/BasicBlock.h"
-#include "symbol/SymbolTable.h"
-#include "llvm-ir/Function.h"
-#include "llvm-ir/constant/Constant.h"
+#include "llvm-ir/instr/StoreInstr.h"
 #include "llvm-ir/constant/ConstantInt.h"
-#include "llvm-ir/instr/ReturnInstr.h"
-#include "llvm-ir/instr/AluInstr.h"
+#include "llvm-ir/instr/AllocaInstr.h"
+#include "llvm-ir/instr/CallInstr.h"
 
 class Visitor {
 public:
@@ -108,12 +105,16 @@ private:
 
     }
 
-    Value visitExpStmt(StmtNode* node) {
+    Value* visitExpStmt(StmtNode* node) {
 
     }
 
     void visitGetintStmt(StmtNode* node) {
+        new CallInstr(curBasicBlock, visitLVal(node->getLVal()), CallInstrType::GETINT);
+    }
 
+    Value* visitLVal(LValNode* node) {
+//        return curSymbolTable->getSymbolTerm(node->getIdent())->getAllocaInstr();
     }
 
     void visitIfStmt(StmtNode* node) {
@@ -125,7 +126,7 @@ private:
     }
 
     void visitPrintfStmt(StmtNode* node) {
-
+//        new CallInstr(curBasicBlock, , node->getStmtType());
     }
 
     void visitReturnStmt(StmtNode* node) {
@@ -146,7 +147,45 @@ private:
     }
 
     void visitDecl(DeclNode* node) {
+        switch (node->getChild()->getType()) {
+            case SyntaxType::CONSTDECL: visitConstDecl(dynamic_cast<ConstDeclNode *>(node->getChild())); break;
+            case SyntaxType::VARDECL: visitVarDecl(dynamic_cast<VarDeclNode *>(node->getChild())); break;
+            default: error(); break;
+        }
+    }
 
+    void visitConstDecl(ConstDeclNode* node) {
+
+    }
+
+    void visitVarDecl(VarDeclNode* node) {
+        FuncType type = visitBType(node->getBType());
+        vector<Node*> varDefs = node->getVarDefs();
+        for (auto i : varDefs) visitVarDef(dynamic_cast<VarDefNode *>(i), type);
+    }
+
+    void visitVarDef(VarDefNode* node, FuncType type) {
+        /* TODO: without array */
+        AllocaInstr* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, false);
+        if (node->getInitVal() != nullptr) {
+            new StoreInstr(curBasicBlock, allocInstr, visitInitVal(node->getInitVal()));
+        }
+    }
+
+    Value* visitInitVal(InitValNode* node) {
+        if (node->getExp() != nullptr) {
+            return visitExp(node->getExp());
+        } else {
+            /* TODO {InitVal{...}}*/
+            error();
+        }
+    }
+
+    FuncType visitBType(BTypeNode* node) {
+        switch (node->getChild()->getType()) {
+            case SyntaxType::INTTK: return FuncType::INT32;
+            default: break;
+        }
     }
 
     Value* visitExp(ExpNode* node) {
@@ -188,12 +227,11 @@ private:
     Value* visitUnaryExp(UnaryExpNode* node) {
         if (node->getPrimaryExp() != nullptr) {
             return visitPrimaryExp(node->getPrimaryExp());
-        } else if (node->getIdent() != nullptr) {
+        } else if (!node->getIdent().empty()) {
 
         } else if (node->getUnaryOp() != SyntaxType::NONE) {
             Value* unaryExp = visitUnaryExp(node->getUnaryExp());
             unaryExp->setFuncType(FuncType::INT32);
-            unaryExp->setValueType(ValueType::CONSTANTINT);
             switch (node->getUnaryOp()) {
                 case SyntaxType::MINU:
                     unaryExp = new AluInstr(curBasicBlock, CONSTANT_ZERO, unaryExp, node->getUnaryOp());

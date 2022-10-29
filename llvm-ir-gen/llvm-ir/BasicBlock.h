@@ -6,7 +6,6 @@
 #define TAYILER_BASICBLOCK_H
 
 #include "Function.h"
-#include "instr/Instr.h"
 #include "list"
 
 static int basicBlockCnt = 0;

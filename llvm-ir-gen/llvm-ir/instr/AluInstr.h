@@ -5,7 +5,7 @@
 #ifndef TAYILER_ALUINSTR_H
 #define TAYILER_ALUINSTR_H
 #include "Instr.h"
-#include "../constant/ConstantInt.h"
+#include "../BasicBlock.h"
 
 class AluInstr: public Instr {
 private:
@@ -19,8 +19,7 @@ public:
         useSrc1 = new Use(src1);
         useSrc2 = new Use(src2);
         this->op = op;
-        setValueType(ValueType::ALUINSTR);
-        setVal(LOCAL_PREFIX + LOCAL_NAME_PREFIX + to_string(LOCAL_INSTR_CNT++));
+        genInstrVal();
         parent->addInstr(this);
     }
 

@@ -8,7 +8,9 @@
 #include "../Node.h"
 
 class VarDeclNode: public Node {
+private:
     Node* bType = nullptr;
+public:
     vector<Node*> varDefs;
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::VARDECL, SyntaxType2String.at(SyntaxType::NONE));
