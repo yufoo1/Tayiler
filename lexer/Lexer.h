@@ -5,7 +5,6 @@
 #ifndef TAYILER_LEXER_H
 #define TAYILER_LEXER_H
 
-#include <vector>
 #include <fstream>
 #include "SyntaxType.h"
 #include "LexCursor.h"

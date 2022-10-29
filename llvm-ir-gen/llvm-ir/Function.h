@@ -8,6 +8,8 @@
 #include <utility>
 
 #include "Value.h"
+#include "instr/AluInstr.h"
+#include "instr/ReturnInstr.h"
 #include "BasicBlock.h"
 #include "../../lexer/SyntaxType.h"
 
@@ -20,12 +22,12 @@ public:
     };
 private:
     string ident;
-    vector<Function::Param>* params;
+    list<Function::Param>* params;
     FuncType retType;
     BasicBlock* entry = nullptr;
-    vector<BasicBlock*> basicBlocks;
+    list<BasicBlock*> basicBlocks;
 public:
-    explicit Function(string ident, vector<Param> *params, FuncType retType) {
+    explicit Function(string ident, list<Param> *params, FuncType retType) {
         this->ident = move(ident);
         this->params = params;
         this->retType = retType;
@@ -40,7 +42,7 @@ public:
         return ident;
     }
 
-    vector<Function::Param>* getParams() {
+    list<Function::Param>* getParams() {
         return params;
     }
 
@@ -52,17 +54,22 @@ public:
         this->entry = entry;
     }
 
+    void addBasicBlock(BasicBlock* basicBlock) {
+        basicBlocks.emplace_back(basicBlock);
+    }
+
     bool hasEntry() {
         return entry != nullptr;
     }
 
-    string getOutputString() {
+    string getValueString() override {
         string s = "define dso_local ";
         s += FuncType2String.at(retType) + " @" + getIdent() + "() {\n";
         for (auto i : basicBlocks) {
-            s += i->getOutputString() + ":\n";
+            s += i->getLabel() + ":\n";
             for (auto j : i->getInstrs()) {
-                s += "\t" + j->getOutputString() + "\n";
+                string str;
+                s += "\t" + j->toString() + "\n";
             }
         }
         s += "}\n";

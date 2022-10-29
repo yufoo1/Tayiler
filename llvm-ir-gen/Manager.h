@@ -22,12 +22,12 @@ public:
         functions.insert({function->getIdent(), function});
     }
 
-    void outputLLVM(const char *outputFile) {
+    void dumpLLVM(const char *outputFile) {
         ofstream f(outputFile);
         for (auto i : functions) {
             if (i.second->hasEntry()) {
-                f << i.second->getOutputString() << endl;
-                cout << i.second->getOutputString() << endl;
+                f << i.second->getValueString() << endl;
+                cout << i.second->getValueString() << endl;
             }
         }
         f.close();

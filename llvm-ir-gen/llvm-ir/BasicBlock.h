@@ -6,39 +6,40 @@
 #define TAYILER_BASICBLOCK_H
 
 #include "Function.h"
-#include "Instr.h"
+#include "instr/Instr.h"
+#include "list"
 
 static int basicBlockCnt = 0;
 static int emptyBasicBlockCnt = 0;
 
 class Function;
+class Instr;
 
 class BasicBlock: public Value {
 private:
     string label;
     Function* function;
-    vector<Instr*> instrs;
-    Instr* begin;
-    Instr* end;
+    list<Instr*> instrs;
 public:
     BasicBlock() {
-        begin = new Instr, end = new Instr;
         label = "EMPYT_BB" + to_string(++emptyBasicBlockCnt);
-        begin->setNext(end), end->setPrev(end);
     }
 
     void setFunction(Function* function) {
         this->label = "b" + to_string((++basicBlockCnt));
         this->function = function;
-        // TODO function.insertAtBegin(this);
     }
 
-    vector<Instr*> getInstrs() {
+    list<Instr*> getInstrs() {
         return instrs;
     }
 
-    string getOutputString() {
-        return "";
+    void addInstr(Instr* instr) {
+        instrs.emplace_back(instr);
+    }
+
+    string getLabel() {
+        return label;
     }
 };
 #endif //TAYILER_BASICBLOCK_H

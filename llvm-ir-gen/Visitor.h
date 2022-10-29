@@ -10,14 +10,17 @@
 #include "llvm-ir/BasicBlock.h"
 #include "symbol/SymbolTable.h"
 #include "llvm-ir/Function.h"
-#include "llvm-ir/Constant.h"
+#include "llvm-ir/constant/Constant.h"
+#include "llvm-ir/constant/ConstantInt.h"
+#include "llvm-ir/instr/ReturnInstr.h"
+#include "llvm-ir/instr/AluInstr.h"
 
 class Visitor {
 public:
     Visitor(Node* root) {
         manager = new Manager;
         visitAst(root);
-        manager->outputLLVM("llvm.ll");
+        manager->dumpLLVM("llvm.ll");
     }
 
 private:
@@ -50,6 +53,7 @@ private:
         auto* function = new Function(ident, retType);
         manager->addFunction(function);
         function->setBody(entry);
+        function->addBasicBlock(entry);
         curFunction = function;
         entry->setFunction(curFunction);
         visitBlock(node->getBlock());
@@ -126,9 +130,10 @@ private:
 
     void visitReturnStmt(StmtNode* node) {
         if (node->getExps().empty()) {
-            new Instr::ReturnInstr(curBasicBlock);
+            new ReturnInstr(curBasicBlock);
         } else {
-            new Instr::ReturnInstr(curBasicBlock, visitExp(node->getExps().front()));
+            Value* value = visitExp(node->getExps().front());
+            new ReturnInstr(curBasicBlock, value);
         }
     }
 
@@ -144,41 +149,64 @@ private:
 
     }
 
-    Value visitExp(ExpNode* node) {
+    Value* visitExp(ExpNode* node) {
         return visitAddExp(dynamic_cast<AddExpNode *>(node->getChild()));
     }
 
-    Value visitAddExp(AddExpNode* node) {
-        // 暂时仅支持二元
+    Value* visitAddExp(AddExpNode* node) {
         if (node->getMulExps().size() == 1) {
             return visitMulExp(dynamic_cast<MulExpNode *>(node->getMulExps().front()));
         } else {
-            Value first = visitExp(dynamic_cast<ExpNode *>(node->getMulExps().front()));
-            Value second = visitExp(dynamic_cast<ExpNode *>(node->getMulExps().back()));
-            SyntaxType op = node->getOps().front();
+            vector<Node*> mulExps = node->getMulExps();
+            vector<SyntaxType> ops = node->getOps();
+            Value* mulExp = visitMulExp(dynamic_cast<MulExpNode *>(mulExps.back()));
+            assert(mulExps.size() - 1 == ops.size());
+            for (int i = ops.size() - 1; i >= 0; i--) {
+                mulExp = new AluInstr(curBasicBlock, visitMulExp(dynamic_cast<MulExpNode *>(mulExps.at(i))), mulExp, ops.at(i));
+            }
+            return mulExp;
         }
 
     }
 
-    Value visitMulExp(MulExpNode* node) {
-        // 暂时仅支持二元
+    Value* visitMulExp(MulExpNode* node) {
         if (node->getUnaryExps().size() == 1) {
             return visitUnaryExp(dynamic_cast<UnaryExpNode *>(node->getUnaryExps().front()));
         } else {
-
+            vector<Node*> unaryExps = node->getUnaryExps();
+            vector<SyntaxType> ops = node->getOps();
+            Value* unaryExp = visitUnaryExp(dynamic_cast<UnaryExpNode *>(unaryExps.back()));
+            assert(unaryExps.size() - 1 == ops.size());
+            for (int i = ops.size() - 1; i >= 0; i--) {
+                unaryExp = new AluInstr(curBasicBlock, visitUnaryExp(dynamic_cast<UnaryExpNode *>(unaryExps.at(i))), unaryExp, ops.at(i));
+            }
+            return unaryExp;
         }
 
     }
 
-    Value visitUnaryExp(UnaryExpNode* node) {
+    Value* visitUnaryExp(UnaryExpNode* node) {
         if (node->getPrimaryExp() != nullptr) {
             return visitPrimaryExp(node->getPrimaryExp());
-        } else {
+        } else if (node->getIdent() != nullptr) {
 
+        } else if (node->getUnaryOp() != SyntaxType::NONE) {
+            Value* unaryExp = visitUnaryExp(node->getUnaryExp());
+            unaryExp->setFuncType(FuncType::INT32);
+            unaryExp->setValueType(ValueType::CONSTANTINT);
+            switch (node->getUnaryOp()) {
+                case SyntaxType::MINU:
+                    unaryExp = new AluInstr(curBasicBlock, CONSTANT_ZERO, unaryExp, node->getUnaryOp());
+                    break;
+                default: break;
+            }
+            return unaryExp;
+        } else {
+            error(); return {};
         }
     }
 
-    Value visitPrimaryExp(PrimaryExpNode* node) {
+    Value* visitPrimaryExp(PrimaryExpNode* node) {
         if (node->getExp() != nullptr) {
             return visitExp(node->getExp());
         } else if (node->getLVal() != nullptr) {
@@ -190,13 +218,13 @@ private:
         }
     }
 
-    Value visitLValExp(LValNode* node) {
+    Value* visitLValExp(LValNode* node) {
 
     }
 
-    Value visitNumber(NumberNode* node) {
-        cout << node->getChild()->getVal() << endl;
-        return *(dynamic_cast<Value *>(new ConstantInt(node->getChild()->getVal())));
+    Value* visitNumber(NumberNode* node) {
+        auto constInt = new ConstantInt(node->getChild()->getVal());
+        return constInt;
     }
 
 //    Value trimTo(Value value, FuncType targetType) {

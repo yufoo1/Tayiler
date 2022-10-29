@@ -6,12 +6,15 @@
 #define TAYILER_UNARYEXPNODE_H
 
 #include "../Node.h"
+#include "UnaryOpNode.h"
 
 class UnaryExpNode: public Node {
 private:
     Node* primaryExp = nullptr;
     string* ident = nullptr;
     Node* funcRParams = nullptr;
+    SyntaxType unaryOp = SyntaxType::NONE;
+    Node* unaryExp = nullptr;
 
 public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
@@ -27,6 +30,8 @@ public:
             case SyntaxType::PRIMARYEXP: assert(ident == nullptr && funcRParams == nullptr), primaryExp = node; break;
             case SyntaxType::IDENFR: assert(primaryExp == nullptr), *ident = node->getVal(); break;
             case SyntaxType::FUNCRPARAMS: assert(primaryExp == nullptr), funcRParams = node; break;
+            case SyntaxType::UNARYOP: assert(unaryOp == SyntaxType::NONE), unaryOp = dynamic_cast<UnaryOpNode*>(node)->getTokenType(); break;
+            case SyntaxType::UNARYEXP: assert(unaryExp == nullptr), unaryExp = node; break;
             default: break;
         }
     }
@@ -41,6 +46,14 @@ public:
 
     FuncRParamsNode* getFuuncRParams() {
         return dynamic_cast<FuncRParamsNode *>(funcRParams);
+    }
+
+    SyntaxType getUnaryOp() {
+        return unaryOp;
+    }
+
+    UnaryExpNode* getUnaryExp() {
+        return dynamic_cast<UnaryExpNode *>(unaryExp);
     }
 };
 #endif //TAYILER_UNARYEXPNODE_H

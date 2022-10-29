@@ -6,7 +6,6 @@
 #define TAYILER_PARSER_H
 
 #include <utility>
-#include <vector>
 #include "map"
 #include "set"
 #include "iostream"

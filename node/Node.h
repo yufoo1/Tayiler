@@ -4,7 +4,6 @@
 
 #ifndef TAYILER_NODE_H
 #define TAYILER_NODE_H
-#include "vector"
 #include "tuple"
 #include <fstream>
 #include <utility>
