@@ -8,6 +8,7 @@
 
 #include "symbol/SymbolTable.h"
 #include "llvm-ir/Function.h"
+#include "llvm-ir/global-val/GlobalString.h"
 
 class Manager {
 public:
@@ -24,6 +25,11 @@ public:
 
     void dumpLLVM(const char *outputFile) {
         ofstream f(outputFile);
+        cout << "declare i32 @getint()\ndeclare void @putint(i32)\ndeclare void @putstr(i8*)\n" << endl;
+        for (auto i : GLOBALSTRINGS) {
+            cout << i->getLabel() + " = constant " + "[" + i->getLenString() + " x " + i->getTypeString() + "] c\"" + i->getStr() << endl;
+        }
+        cout << endl;
         for (auto i : functions) {
             if (i.second->hasEntry()) {
                 f << i.second->getValueString() << endl;

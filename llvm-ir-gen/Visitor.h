@@ -10,7 +10,10 @@
 #include "llvm-ir/instr/StoreInstr.h"
 #include "llvm-ir/constant/ConstantInt.h"
 #include "llvm-ir/instr/AllocaInstr.h"
-#include "llvm-ir/instr/CallInstr.h"
+#include "llvm-ir/instr/GetintInstr.h"
+#include "llvm-ir/instr/GetElementPtr.h"
+#include "llvm-ir/instr/PutstrInstr.h"
+#include "llvm-ir/instr/PutintInstr.h"
 
 class Visitor {
 public:
@@ -111,7 +114,7 @@ private:
     }
 
     void visitGetintStmt(StmtNode* node) {
-        new CallInstr(curBasicBlock, visitLVal(node->getLVal()), CallInstrType::GETINT);
+        new GetintInstr(curBasicBlock, visitLVal(node->getLVal()));
     }
 
     Value* visitLVal(LValNode* node) {
@@ -127,7 +130,27 @@ private:
     }
 
     void visitPrintfStmt(StmtNode* node) {
-//        new CallInstr(curBasicBlock, , node->getStmtType());
+        string formatString = node->getFormatString();
+        vector<ExpNode*> exps = node->getExps();
+        int i = 0, cnt = 0;
+        string str;
+        while (i < formatString.length()) {
+            if (formatString.at(i) != '\"' && formatString.at(i) != '%') {
+                str += formatString.at(i);
+            } else if ((formatString.at(i) == '\"' || formatString.at(i) == '%') && !str.empty()) {
+                auto* globalString = new GlobalString(str, FuncType::INT8PTR);
+                GLOBALSTRINGS.insert(globalString);
+                auto* instr = new GetElementPtr(curBasicBlock, globalString);
+                new PutstrInstr(curBasicBlock, instr);
+                if (formatString.at(i) == '%') {
+                    if (formatString.at(++i) == 'd') {
+                        new PutintInstr(curBasicBlock, visitExp(exps.at(cnt++)));
+                    }
+                }
+                str.clear();
+            }
+            i++;
+        }
     }
 
     void visitReturnStmt(StmtNode* node) {

@@ -36,13 +36,15 @@ std::map<CallInstrType, std::string> CallInstrType2String = {
 };
 
 enum class FuncType {
-    INT1, INT32, VOID
+    INT1, INT8, INT32, VOID, INT8PTR
 };
 
 std::map<FuncType, std::string> FuncType2String = {
         {FuncType::INT1, "i1"},
+        {FuncType::INT8, "i8"},
         {FuncType::INT32, "i32"},
         {FuncType::VOID, "void"},
+        {FuncType::INT8PTR, "i8*"},
 };
 
 std::map<std::string, SyntaxType> ReservedWordMap = {

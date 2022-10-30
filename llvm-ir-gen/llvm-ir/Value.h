@@ -23,6 +23,7 @@ public:
         switch (funcType) {
             case FuncType::INT1: return "i1";
             case FuncType::INT32: return "i32";
+            case FuncType::VOID: return "void";
             default: break;
         }
     }
