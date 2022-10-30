@@ -9,6 +9,6 @@
 
 class Constant: public Value {
 public:
-
+    explicit Constant() = default;
 };
 #endif //TAYILER_CONSTANT_H

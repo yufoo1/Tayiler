@@ -8,6 +8,7 @@
 #include "../Node.h"
 
 class BTypeNode: public Node {
+public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
 //        parserList->emplace_back(SyntaxType::BTYPE, SyntaxType2String.at(SyntaxType::NONE));
     }

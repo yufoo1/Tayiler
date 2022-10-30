@@ -8,8 +8,6 @@
 #include "../Use.h"
 static string LOCAL_PREFIX = "%";
 static string LOCAL_NAME_PREFIX = "v";
-static int LOCAL_INSTR_CNT = 0;
-
 
 class Instr: public Value {
 public:
@@ -21,8 +19,8 @@ public:
 
 protected:
 
-    void genInstrVal() {
-        setVal(LOCAL_PREFIX + LOCAL_NAME_PREFIX + to_string(LOCAL_INSTR_CNT++));
+    void genInstrVal(int idx) {
+        setVal(LOCAL_PREFIX + LOCAL_NAME_PREFIX + to_string(idx));
     }
 };
 

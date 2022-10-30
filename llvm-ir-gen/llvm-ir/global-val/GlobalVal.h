@@ -12,7 +12,7 @@ class GlobalVal: public Value {
 private:
     string prefix = "@";
 public:
-    explicit GlobalVal() { }
+    explicit GlobalVal() = default;
 protected:
     string getPrefix() {
         return prefix;

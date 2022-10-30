@@ -13,8 +13,8 @@ class AllocaInstr: public Instr {
 private:
     string ident;
 public:
-    explicit AllocaInstr(BasicBlock* parent, SymbolTable* table, string ident, FuncType type, bool isConstant) {
-        genInstrVal();
+    explicit AllocaInstr(BasicBlock* parent, SymbolTable* table, string ident, FuncType type, bool isConstant, int idx) {
+        genInstrVal(idx);
         setFuncType(type);
         table->addSymbolTerm(new SymbolTerm(ident, type, isConstant));
         this->ident = ident;

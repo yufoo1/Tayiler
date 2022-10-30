@@ -11,7 +11,7 @@
 #include "llvm-ir/constant/ConstantInt.h"
 #include "llvm-ir/instr/AllocaInstr.h"
 #include "llvm-ir/instr/GetintInstr.h"
-#include "llvm-ir/instr/GetElementPtr.h"
+#include "llvm-ir/instr/GetElementPtrInstr.h"
 #include "llvm-ir/instr/PutstrInstr.h"
 #include "llvm-ir/instr/PutintInstr.h"
 
@@ -27,7 +27,7 @@ private:
     Manager* manager;
     BasicBlock* curBasicBlock;
     SymbolTable* curSymbolTable;
-    map<string, AllocaInstr*> ident2AllocaInstr; /* TODO  merge into SymbolTable */
+    map<string, AllocaInstr*> ident2AllocaInstr; /* TODO  need merge into SymbolTable */
     Function* curFunction;
 
     void visitAst(Node* root) {
@@ -41,9 +41,25 @@ private:
     }
 
     void visitFuncDef(FuncDefNode* node) {
-
-        string ident = node->getVal();
+        auto *params = new list<Function::Param*>;
+        if (node->getFunFParams() != nullptr) {
+            for (auto i : node->getFunFParams()->getFuncFParams()) {
+                params->emplace_back(new Function::Param(dynamic_cast<FuncFParamNode*>(i)->getIdent(), SyntaxType2FuncType.at(dynamic_cast<FuncFParamNode*>(i)->getBType()->getType())));
+            }
+        }
+        auto* function = new Function(node->getIdent(), params, SyntaxType2FuncType.at(node->getFuncType()->getTokenType()));
+        auto* entry = new BasicBlock();
+        curBasicBlock = entry;
+        curSymbolTable = new SymbolTable(curSymbolTable);
+        manager->addFunction(function);
+        function->setBody(entry);
+        function->addBasicBlock(entry);
+        curFunction = function;
+        entry->setFunction(curFunction);
+        visitBlock(node->getBlock());
     }
+
+
 
     void visitMainFuncDef(MainFuncDefNode* node) {
         FuncType retType = FuncType::INT32;
@@ -126,7 +142,10 @@ private:
     }
 
     void visitLValAssignStmt(StmtNode* node) {
-
+        Value* lVal = visitLVal(node->getLVal());
+        /* TODO array */
+        Value* exp = visitExp(node->getExps().front());
+        new StoreInstr(curBasicBlock, lVal, exp);
     }
 
     void visitPrintfStmt(StmtNode* node) {
@@ -137,19 +156,23 @@ private:
         while (i < formatString.length()) {
             if (formatString.at(i) != '\"' && formatString.at(i) != '%') {
                 str += formatString.at(i);
-            } else if ((formatString.at(i) == '\"' || formatString.at(i) == '%') && !str.empty()) {
-                auto* globalString = new GlobalString(str, FuncType::INT8PTR);
-                GLOBALSTRINGS.insert(globalString);
-                auto* instr = new GetElementPtr(curBasicBlock, globalString);
-                new PutstrInstr(curBasicBlock, instr);
+            } else if (formatString.at(i) == '\"' && !str.empty() || formatString.at(i) == '%') {
+                if (!str.empty()) {
+                    auto* globalString = new GlobalString(str, FuncType::INT8);
+                    GLOBALSTRINGS.insert(globalString);
+                    auto* instr = new GetElementPtrInstr(curBasicBlock, globalString, curFunction->genInstrIdx());
+                    new PutstrInstr(curBasicBlock, instr);
+                }
                 if (formatString.at(i) == '%') {
                     if (formatString.at(++i) == 'd') {
                         new PutintInstr(curBasicBlock, visitExp(exps.at(cnt++)));
+                    } else {
+                        error();
                     }
                 }
                 str.clear();
             }
-            i++;
+            ++i;
         }
     }
 
@@ -190,7 +213,7 @@ private:
 
     void visitVarDef(VarDefNode* node, FuncType type) {
         /* TODO: without array */
-        AllocaInstr* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, false);
+        AllocaInstr* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, false, curFunction->genInstrIdx());
         ident2AllocaInstr.insert({allocInstr->getIdent(), allocInstr});
         if (node->getInitVal() != nullptr) {
             new StoreInstr(curBasicBlock, allocInstr, visitInitVal(node->getInitVal()));
@@ -226,7 +249,7 @@ private:
             Value* mulExp = visitMulExp(dynamic_cast<MulExpNode *>(mulExps.back()));
             assert(mulExps.size() - 1 == ops.size());
             for (int i = ops.size() - 1; i >= 0; i--) {
-                mulExp = new AluInstr(curBasicBlock, visitMulExp(dynamic_cast<MulExpNode *>(mulExps.at(i))), mulExp, ops.at(i));
+                mulExp = new AluInstr(curBasicBlock, visitMulExp(dynamic_cast<MulExpNode *>(mulExps.at(i))), mulExp, ops.at(i), curFunction->genInstrIdx());
             }
             return mulExp;
         }
@@ -242,7 +265,7 @@ private:
             Value* unaryExp = visitUnaryExp(dynamic_cast<UnaryExpNode *>(unaryExps.back()));
             assert(unaryExps.size() - 1 == ops.size());
             for (int i = ops.size() - 1; i >= 0; i--) {
-                unaryExp = new AluInstr(curBasicBlock, visitUnaryExp(dynamic_cast<UnaryExpNode *>(unaryExps.at(i))), unaryExp, ops.at(i));
+                unaryExp = new AluInstr(curBasicBlock, visitUnaryExp(dynamic_cast<UnaryExpNode *>(unaryExps.at(i))), unaryExp, ops.at(i), curFunction->genInstrIdx());
             }
             return unaryExp;
         }
@@ -259,7 +282,7 @@ private:
             unaryExp->setFuncType(FuncType::INT32);
             switch (node->getUnaryOp()) {
                 case SyntaxType::MINU:
-                    unaryExp = new AluInstr(curBasicBlock, CONSTANT_ZERO, unaryExp, node->getUnaryOp());
+                    unaryExp = new AluInstr(curBasicBlock, CONSTANT_ZERO, unaryExp, node->getUnaryOp(), curFunction->genInstrIdx());
                     break;
                 default: break;
             }

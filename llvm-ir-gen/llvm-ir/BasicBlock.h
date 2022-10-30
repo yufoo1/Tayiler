@@ -8,8 +8,8 @@
 #include "Function.h"
 #include "list"
 
-static int basicBlockCnt = 0;
-static int emptyBasicBlockCnt = 0;
+static int BASICBLOCKCNT = 0;
+static int EMPTYBASICBLOCKCNT = 0;
 
 class Function;
 class Instr;
@@ -21,11 +21,11 @@ private:
     list<Instr*> instrs;
 public:
     BasicBlock() {
-        label = "EMPYT_BB" + to_string(++emptyBasicBlockCnt);
+        label = "EMPYT_BB" + to_string(++EMPTYBASICBLOCKCNT);
     }
 
     void setFunction(Function* function) {
-        this->label = "b" + to_string((++basicBlockCnt));
+        this->label = "b" + to_string((++BASICBLOCKCNT));
         this->function = function;
     }
 

@@ -14,12 +14,13 @@ private:
     Use* useSrc1 = nullptr;
     Use* useSrc2 = nullptr;
 public:
-    explicit AluInstr(BasicBlock* parent, Value* src1, Value* src2, SyntaxType op) {
+    explicit AluInstr(BasicBlock* parent, Value* src1, Value* src2, SyntaxType op, int idx) {
         assert(set.count(op));
         useSrc1 = new Use(src1);
         useSrc2 = new Use(src2);
+        setFuncType(FuncType::INT32);
         this->op = op;
-        genInstrVal();
+        genInstrVal(idx);
         parent->addInstr(this);
     }
 

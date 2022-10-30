@@ -24,19 +24,8 @@ enum class StmtType {
     NONE, BLOCK, BREAK, CONTINUE, EXP, GETINT, IF, LVALASSIGN, PRINTF, RETURN, WHILE, SEMICN
 };
 
-enum class CallInstrType {
-    NONE, GETINT, PUTINT, PUTCH, PUTSTR
-};
-
-std::map<CallInstrType, std::string> CallInstrType2String = {
-        {CallInstrType::GETINT, "getint"},
-        {CallInstrType::PUTINT, "putint"},
-        {CallInstrType::PUTCH,  "putch"},
-        {CallInstrType::PUTSTR, "putstr"},
-};
-
 enum class FuncType {
-    INT1, INT8, INT32, VOID, INT8PTR
+    INT1, INT8, INT32, VOID
 };
 
 std::map<FuncType, std::string> FuncType2String = {
@@ -44,7 +33,11 @@ std::map<FuncType, std::string> FuncType2String = {
         {FuncType::INT8, "i8"},
         {FuncType::INT32, "i32"},
         {FuncType::VOID, "void"},
-        {FuncType::INT8PTR, "i8*"},
+};
+
+std::map<SyntaxType, FuncType> SyntaxType2FuncType = {
+        {SyntaxType::INTTK, FuncType::INT32},
+        {SyntaxType::VOIDTK, FuncType::VOID}
 };
 
 std::map<std::string, SyntaxType> ReservedWordMap = {

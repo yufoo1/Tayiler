@@ -20,7 +20,7 @@ public:
 
     string toString() override {
         return "call " + getFuncTypeString() + " @putstr" + "(" +
-               FuncType2String.at(use->getValue()->getFuncType()) + " " + use->getValue()->getVal() + ")";
+               FuncType2String.at(use->getValue()->getFuncType()) + "* " + use->getValue()->getVal() + ")";
     }
 };
 #endif //TAYILER_PUTSTRINSTR_H

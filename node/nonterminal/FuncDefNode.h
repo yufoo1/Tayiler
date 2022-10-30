@@ -12,8 +12,9 @@
 class FuncDefNode: public Node{
 private:
     Node* funcType = nullptr;
-    string ident = nullptr;
+    string ident;
     Node* funcFParams = nullptr;
+    Node* block = nullptr;
 public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::FUNCDEF, SyntaxType2String.at(SyntaxType::NONE));
@@ -28,6 +29,7 @@ public:
             case SyntaxType::FUNCTYPE: assert(funcType == nullptr), funcType = node; break;
             case SyntaxType::IDENFR: assert(ident.empty()), ident = node->getVal(); break;
             case SyntaxType::FUNCFPARAMS: assert(funcFParams == nullptr), funcFParams = node; break;
+            case SyntaxType::BLOCK: assert(block == nullptr), block = node; break;
             default: break;
         }
     }
@@ -41,7 +43,11 @@ public:
     }
 
     FuncFParamsNode* getFunFParams() {
-        return dynamic_cast<FuncFParamsNode *>(funcFParams);
+        return funcFParams == nullptr ? nullptr : dynamic_cast<FuncFParamsNode *>(funcFParams);
+    }
+
+    BlockNode* getBlock() {
+        return dynamic_cast<BlockNode *>(block);
     }
 };
 #endif //TAYILER_FUNCDEFNODE_H

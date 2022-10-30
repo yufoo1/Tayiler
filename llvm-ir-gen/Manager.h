@@ -12,8 +12,7 @@
 
 class Manager {
 public:
-    explicit Manager() {
-    }
+    explicit Manager() = default;
 
     SymbolTable getSymbolTable() {
         return symbolTable;
@@ -27,7 +26,7 @@ public:
         ofstream f(outputFile);
         cout << "declare i32 @getint()\ndeclare void @putint(i32)\ndeclare void @putstr(i8*)\n" << endl;
         for (auto i : GLOBALSTRINGS) {
-            cout << i->getLabel() + " = constant " + "[" + i->getLenString() + " x " + i->getTypeString() + "] c\"" + i->getStr() << endl;
+            cout << i->getLabel() + " = constant " + "[" + i->getLenString() + " x " + i->getTypeString() + "] c\"" + i->getStr() + "\"" << endl;
         }
         cout << endl;
         for (auto i : functions) {

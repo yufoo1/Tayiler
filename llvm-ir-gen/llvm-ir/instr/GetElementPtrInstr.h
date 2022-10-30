@@ -2,19 +2,20 @@
 // Created by yufoo1 on 2022/10/30.
 //
 
-#ifndef TAYILER_GETELEMENTPTR_H
-#define TAYILER_GETELEMENTPTR_H
+#ifndef TAYILER_GETELEMENTPTRINSTR_H
+#define TAYILER_GETELEMENTPTRINSTR_H
 
 #include "Instr.h"
 #include "../global-val/GlobalString.h"
 #include "../BasicBlock.h"
 
-class GetElementPtr: public Instr {
+class GetElementPtrInstr: public Instr {
 private:
     GlobalString* globalString;
 public:
-    explicit GetElementPtr(BasicBlock* parent, GlobalString* globalString) {
-        genInstrVal();
+    explicit GetElementPtrInstr(BasicBlock* parent, GlobalString* globalString, int idx) {
+        genInstrVal(idx);
+        this->setFuncType(FuncType::INT8);
         this->globalString = globalString;
         parent->addInstr(this);
     }
@@ -24,4 +25,4 @@ public:
 
     }
 };
-#endif //TAYILER_GETELEMENTPTR_H
+#endif //TAYILER_GETELEMENTPTRINSTR_H

@@ -8,7 +8,6 @@
 #include "iostream"
 #include "../Value.h"
 
-class ConstantInt;
 class ConstantInt: public Constant {
 private:
     int intVal;

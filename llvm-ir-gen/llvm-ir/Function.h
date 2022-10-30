@@ -18,19 +18,36 @@ using namespace std;
 class Function: public Value {
 public:
     class Param {
+    private:
+        FuncType type;
+        string ident;
+    public:
+        explicit Param(string ident, FuncType type) {
+            this->ident = ident;
+            this->type = type;
+        }
 
+        string getTypeString() {
+            return FuncType2String.at(type);
+        }
+
+        string getIdent() {
+            return ident;
+        }
     };
 private:
     string ident;
-    list<Function::Param>* params;
+    list<Function::Param*>* params;
     FuncType retType;
     BasicBlock* entry = nullptr;
     list<BasicBlock*> basicBlocks;
+    int localInstrCnt;
 public:
-    explicit Function(string ident, list<Param> *params, FuncType retType) {
+    explicit Function(string ident, list<Param*> *params, FuncType retType) {
         this->ident = move(ident);
         this->params = params;
         this->retType = retType;
+        this->localInstrCnt = 0;
     }
 
     explicit Function(string ident, FuncType retType) {
@@ -42,7 +59,11 @@ public:
         return ident;
     }
 
-    list<Function::Param>* getParams() {
+    int genInstrIdx() {
+        return localInstrCnt++;
+    }
+
+    list<Function::Param*>* getParams() {
         return params;
     }
 
