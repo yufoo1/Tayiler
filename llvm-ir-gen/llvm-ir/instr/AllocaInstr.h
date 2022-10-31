@@ -12,11 +12,13 @@
 class AllocaInstr: public Instr {
 private:
     string ident;
+    bool isParam;
 public:
-    explicit AllocaInstr(BasicBlock* parent, SymbolTable* table, string ident, FuncType type, bool isConstant, int idx) {
+    explicit AllocaInstr(BasicBlock* parent, SymbolTable* table, string ident, FuncType type, bool isConstant, bool isParam, int idx) {
         genInstrVal(idx);
         setFuncType(type);
         table->addSymbolTerm(new SymbolTerm(ident, type, isConstant));
+        this->isParam = isParam;
         this->ident = ident;
         parent->addInstr(this);
     }
@@ -26,7 +28,7 @@ public:
     }
 
     string toString() override {
-        return getVal() + " = alloca " + getFuncTypeString();
+        return isParam ? "" : getVal() + " = alloca " + getFuncTypeString();
     }
 };
 #endif //TAYILER_ALLOCAINSTR_H

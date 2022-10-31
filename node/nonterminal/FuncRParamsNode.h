@@ -16,7 +16,7 @@ public:
     }
 
     SyntaxType getType() override {
-        return SyntaxType::FUNCFPARAMS;
+        return SyntaxType::FUNCRPARAMS;
     }
 
     void insertNode(Node *node) override {

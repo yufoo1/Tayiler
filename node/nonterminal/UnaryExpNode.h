@@ -44,7 +44,7 @@ public:
         return ident;
     }
 
-    FuncRParamsNode* getFuuncRParams() {
+    FuncRParamsNode* getFuncRParams() {
         return dynamic_cast<FuncRParamsNode *>(funcRParams);
     }
 

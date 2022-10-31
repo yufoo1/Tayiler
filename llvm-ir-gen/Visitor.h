@@ -14,6 +14,7 @@
 #include "llvm-ir/instr/GetElementPtrInstr.h"
 #include "llvm-ir/instr/PutstrInstr.h"
 #include "llvm-ir/instr/PutintInstr.h"
+#include "llvm-ir/instr/CallInstr.h"
 
 class Visitor {
 public:
@@ -41,21 +42,27 @@ private:
     }
 
     void visitFuncDef(FuncDefNode* node) {
-        auto *params = new list<Function::Param*>;
-        if (node->getFunFParams() != nullptr) {
-            for (auto i : node->getFunFParams()->getFuncFParams()) {
-                params->emplace_back(new Function::Param(dynamic_cast<FuncFParamNode*>(i)->getIdent(), SyntaxType2FuncType.at(dynamic_cast<FuncFParamNode*>(i)->getBType()->getType())));
-            }
-        }
-        auto* function = new Function(node->getIdent(), params, SyntaxType2FuncType.at(node->getFuncType()->getTokenType()));
+        auto *params = new vector<Param*>;
         auto* entry = new BasicBlock();
         curBasicBlock = entry;
         curSymbolTable = new SymbolTable(curSymbolTable);
+        if (node->getFunFParams() != nullptr) {
+            for (auto i : node->getFunFParams()->getFuncFParams()) {
+                auto* param = new Param(dynamic_cast<FuncFParamNode*>(i)->getIdent(), SyntaxType2FuncType.at(dynamic_cast<FuncFParamNode*>(i)->getBType()->getChild()->getType()));
+                params->emplace_back(param);
+            }
+        }
+        auto* function = new Function(node->getIdent(), params, SyntaxType2FuncType.at(node->getFuncType()->getTokenType()));
         manager->addFunction(function);
         function->setBody(entry);
         function->addBasicBlock(entry);
         curFunction = function;
         entry->setFunction(curFunction);
+        for (auto i : *params) {
+            auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, i->getIdent(), i->getType(), false, true, curFunction->genInstrIdx());
+            ident2AllocaInstr.insert({allocInstr->getIdent(), allocInstr});
+            i->setVal(allocInstr->getVal());
+        }
         visitBlock(node->getBlock());
     }
 
@@ -126,7 +133,7 @@ private:
     }
 
     Value* visitExpStmt(StmtNode* node) {
-
+        visitExp(node->getExps().front());
     }
 
     void visitGetintStmt(StmtNode* node) {
@@ -213,7 +220,7 @@ private:
 
     void visitVarDef(VarDefNode* node, FuncType type) {
         /* TODO: without array */
-        AllocaInstr* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, false, curFunction->genInstrIdx());
+        AllocaInstr* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, false, false, curFunction->genInstrIdx());
         ident2AllocaInstr.insert({allocInstr->getIdent(), allocInstr});
         if (node->getInitVal() != nullptr) {
             new StoreInstr(curBasicBlock, allocInstr, visitInitVal(node->getInitVal()));
@@ -276,7 +283,13 @@ private:
         if (node->getPrimaryExp() != nullptr) {
             return visitPrimaryExp(node->getPrimaryExp());
         } else if (!node->getIdent().empty()) {
-
+            vector<Value*> values;
+            if (node->getFuncRParams() != nullptr) {
+                for (auto i : node->getFuncRParams()->getExps()) {
+                    values.emplace_back(visitExp(dynamic_cast<ExpNode *>(i)));
+                }
+            }
+            new CallInstr(curBasicBlock, manager->getFunction(node->getIdent())->getIdent(), manager->getFunction(node->getIdent())->getRetType(), values);
         } else if (node->getUnaryOp() != SyntaxType::NONE) {
             Value* unaryExp = visitUnaryExp(node->getUnaryExp());
             unaryExp->setFuncType(FuncType::INT32);

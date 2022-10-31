@@ -10,7 +10,7 @@
 class FuncFParamNode: public Node {
 private:
     Node* bType = nullptr;
-    string ident = nullptr;
+    string ident;
     bool isArray = false;
     vector<Node*> constExps;
 public:

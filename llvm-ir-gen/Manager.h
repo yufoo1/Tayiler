@@ -38,6 +38,10 @@ public:
         f.close();
     }
 
+    Function* getFunction(string ident) {
+        return functions.at(ident);
+    }
+
 private:
     SymbolTable symbolTable = SymbolTable(nullptr);
     map<string, Function*> functions;

@@ -19,7 +19,7 @@ protected:
 private:
     string val;
 public:
-    explicit Node() { }
+    explicit Node() = default;
 
     explicit Node(string val) {
         this->val = move(val);

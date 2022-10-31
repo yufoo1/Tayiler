@@ -14,36 +14,49 @@
 #include "../../lexer/SyntaxType.h"
 
 using namespace std;
+class Param {
+private:
+    FuncType type;
+    string ident;
+    string val;
+public:
+    explicit Param(string ident, FuncType type) {
+        this->ident = ident;
+        this->type = type;
+    }
+
+    string getTypeString() {
+        return FuncType2String.at(type);
+    }
+
+    void setVal(string val) {
+        this->val = val;
+    }
+
+    string getVal() {
+        return val;
+    }
+
+    FuncType getType() {
+        return type;
+    }
+
+    string getIdent() {
+        return ident;
+    }
+};
 
 class Function: public Value {
-public:
-    class Param {
-    private:
-        FuncType type;
-        string ident;
-    public:
-        explicit Param(string ident, FuncType type) {
-            this->ident = ident;
-            this->type = type;
-        }
-
-        string getTypeString() {
-            return FuncType2String.at(type);
-        }
-
-        string getIdent() {
-            return ident;
-        }
-    };
 private:
     string ident;
-    list<Function::Param*>* params;
+    vector<Param*>* params = nullptr;
     FuncType retType;
     BasicBlock* entry = nullptr;
     list<BasicBlock*> basicBlocks;
+    BasicBlock* retBasicBlock = nullptr;
     int localInstrCnt;
 public:
-    explicit Function(string ident, list<Param*> *params, FuncType retType) {
+    explicit Function(string ident, vector<Param*>* params, FuncType retType) {
         this->ident = move(ident);
         this->params = params;
         this->retType = retType;
@@ -63,7 +76,7 @@ public:
         return localInstrCnt++;
     }
 
-    list<Function::Param*>* getParams() {
+    vector<Param*>* getParams() {
         return params;
     }
 
@@ -73,6 +86,10 @@ public:
 
     void setBody(BasicBlock* entry) {
         this->entry = entry;
+    }
+
+    BasicBlock* getEntry() {
+        return entry;
     }
 
     void addBasicBlock(BasicBlock* basicBlock) {
@@ -85,12 +102,19 @@ public:
 
     string getValueString() override {
         string s = "define dso_local ";
-        s += FuncType2String.at(retType) + " @" + getIdent() + "() {\n";
+        s += FuncType2String.at(retType) + " @" + getIdent() + "(";
+        if (params != nullptr) {
+            for (int i = 0; i < params->size(); i++) {
+                if (i != 0) s += ", ";
+                s += params->at(i)->getTypeString() + " " + params->at(i)->getVal();
+            }
+        }
+        s +=") {\n";
         for (auto i : basicBlocks) {
             s += i->getLabel() + ":\n";
             for (auto j : i->getInstrs()) {
-                string str;
-                s += "\t" + j->toString() + "\n";
+                string str = j->toString();
+               if (!str.empty()) s += "\t" + j->toString() + "\n";
             }
         }
         s += "}\n";
