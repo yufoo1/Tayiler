@@ -24,21 +24,20 @@ public:
 
     void dumpLLVM(const char *outputFile) {
         ofstream f(outputFile);
-        cout << "declare i32 @getint()\ndeclare void @putint(i32)\ndeclare void @putstr(i8*)\n" << endl;
+        f << "declare i32 @getint()\ndeclare void @putint(i32)\ndeclare void @putstr(i8*)\n" << endl;
         for (auto i : GLOBALSTRINGS) {
-            cout << i->getLabel() + " = constant " + "[" + i->getLenString() + " x " + i->getTypeString() + "] c\"" + i->getStr() + "\"" << endl;
+            f << i->toString() << endl;
         }
         cout << endl;
         for (auto i : functions) {
             if (i.second->hasEntry()) {
-                f << i.second->getValueString() << endl;
-                cout << i.second->getValueString() << endl;
+                f << i.second->toString() << endl;
             }
         }
         f.close();
     }
 
-    Function* getFunction(string ident) {
+    Function* getFunction(const string& ident) {
         return functions.at(ident);
     }
 

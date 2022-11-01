@@ -19,7 +19,7 @@ public:
 
 protected:
 
-    void genInstrVal(int idx) {
+    void genInstrVirtualReg(int idx) {
         setVal(LOCAL_PREFIX + LOCAL_NAME_PREFIX + to_string(idx));
     }
 };

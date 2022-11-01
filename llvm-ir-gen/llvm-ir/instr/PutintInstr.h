@@ -19,7 +19,7 @@ public:
     }
 
     string toString() override {
-        return "call " + getFuncTypeString() + " @putint" + "(" +
+        return "call " + FuncType2String.at(getFuncType()) + " @putint" + "(" +
                FuncType2String.at(use->getValue()->getFuncType()) + " " + use->getValue()->getVal() + ")";
     }
 };

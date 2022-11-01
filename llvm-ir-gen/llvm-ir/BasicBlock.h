@@ -18,7 +18,7 @@ class BasicBlock: public Value {
 private:
     string label;
     Function* function;
-    list<Instr*> instrs;
+    vector<Instr*> instrs;
 public:
     BasicBlock() {
         label = "EMPYT_BB" + to_string(++EMPTYBASICBLOCKCNT);
@@ -29,7 +29,7 @@ public:
         this->function = function;
     }
 
-    list<Instr*> getInstrs() {
+    vector<Instr*> getInstrs() {
         return instrs;
     }
 

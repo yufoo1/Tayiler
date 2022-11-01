@@ -11,22 +11,11 @@ private:
     FuncType funcType;
     string val;
 public:
-    Value(FuncType type) {
+    explicit Value(FuncType type) {
         this->funcType = type;
     }
 
-    Value() {
-
-    }
-
-    string getFuncTypeString() {
-        switch (funcType) {
-            case FuncType::INT1: return "i1";
-            case FuncType::INT32: return "i32";
-            case FuncType::VOID: return "void";
-            default: break;
-        }
-    }
+    explicit Value() = default;
 
     string getVal() {
         return val;
@@ -43,8 +32,6 @@ public:
     FuncType getFuncType() {
         return funcType;
     }
-
-    virtual string getValueString() { }
 
     virtual string toString() { }
 

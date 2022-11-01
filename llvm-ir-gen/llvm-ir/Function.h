@@ -14,38 +14,19 @@
 #include "../../lexer/SyntaxType.h"
 
 using namespace std;
-class Param {
+class Param: public Value {
 private:
-    FuncType type;
     string ident;
-    string val;
 public:
     explicit Param(string ident, FuncType type) {
         this->ident = ident;
-        this->type = type;
-    }
-
-    string getTypeString() {
-        return FuncType2String.at(type);
-    }
-
-    void setVal(string val) {
-        this->val = val;
-    }
-
-    string getVal() {
-        return val;
-    }
-
-    FuncType getType() {
-        return type;
+        setFuncType(type);
     }
 
     string getIdent() {
         return ident;
     }
 };
-
 class Function: public Value {
 private:
     string ident;
@@ -56,16 +37,14 @@ private:
     BasicBlock* retBasicBlock = nullptr;
     int localInstrCnt;
 public:
-    explicit Function(string ident, vector<Param*>* params, FuncType retType) {
+    explicit Function(BasicBlock* entry, string ident, vector<Param*>* params, FuncType retType) {
         this->ident = move(ident);
         this->params = params;
         this->retType = retType;
         this->localInstrCnt = 0;
-    }
-
-    explicit Function(string ident, FuncType retType) {
-        this->ident = move(ident);
-        this->retType = retType;
+        setBody(entry);
+        addBasicBlock(entry);
+        entry->setFunction(this);
     }
 
     string getIdent() {
@@ -100,13 +79,13 @@ public:
         return entry != nullptr;
     }
 
-    string getValueString() override {
+    string toString() override {
         string s = "define dso_local ";
         s += FuncType2String.at(retType) + " @" + getIdent() + "(";
         if (params != nullptr) {
             for (int i = 0; i < params->size(); i++) {
                 if (i != 0) s += ", ";
-                s += params->at(i)->getTypeString() + " " + params->at(i)->getVal();
+                s += FuncType2String.at(params->at(i)->getFuncType()) + " " + params->at(i)->getVal();
             }
         }
         s +=") {\n";
@@ -114,7 +93,7 @@ public:
             s += i->getLabel() + ":\n";
             for (auto j : i->getInstrs()) {
                 string str = j->toString();
-               if (!str.empty()) s += "\t" + j->toString() + "\n";
+                if (!str.empty()) s += "\t" + j->toString() + "\n";
             }
         }
         s += "}\n";

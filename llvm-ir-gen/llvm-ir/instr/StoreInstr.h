@@ -18,7 +18,7 @@ public:
     }
 
     string toString() override {
-        return "store " + valUse->getValue()->getFuncTypeString() + " " + valUse->getValue()->getVal() + ", " + tarUse->getValue()->getFuncTypeString() + "* " + tarUse->getValue()->getVal();
+        return "store " + FuncType2String.at(valUse->getValue()->getFuncType()) + " " + valUse->getValue()->getVal() + ", " + FuncType2String.at(tarUse->getValue()->getFuncType()) + "* " + tarUse->getValue()->getVal();
     }
 };
 #endif //TAYILER_STOREINSTR_H

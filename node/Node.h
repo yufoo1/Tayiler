@@ -17,7 +17,7 @@ class Node {
 protected:
     Node* child = nullptr;
 private:
-    string val;
+    string val; /* if instr, val is the virtual register allocated, else if constantInt, val is the value of the constantInt. */
 public:
     explicit Node() = default;
 

@@ -14,14 +14,15 @@ private:
     GlobalString* globalString;
 public:
     explicit GetElementPtrInstr(BasicBlock* parent, GlobalString* globalString, int idx) {
-        genInstrVal(idx);
+        genInstrVirtualReg(idx);
         this->setFuncType(FuncType::INT8);
         this->globalString = globalString;
         parent->addInstr(this);
     }
 
     string toString() {
-        return getVal() + " = getelementptr inbounds " + "[" + globalString->getLenString() + " x " + globalString->getTypeString() + "], " + "[" + globalString->getLenString() + " x " + globalString->getTypeString() + "]* " + globalString->getLabel() + ", i32 0, i32 0";
+        return getVal() + " = getelementptr inbounds " + "[" + to_string(globalString->getStr().length()) + " x " + FuncType2String.at(globalString->getFuncType()) + "], " + "[" +
+                to_string(globalString->getStr().length()) + " x " + FuncType2String.at(globalString->getFuncType()) + "]* " + globalString->getLabel() + ", i32 0, i32 0";
 
     }
 };

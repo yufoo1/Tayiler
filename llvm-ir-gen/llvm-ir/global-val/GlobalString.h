@@ -12,15 +12,12 @@ class GlobalString;
 static std::set<GlobalString*> GLOBALSTRINGS;
 class GlobalString: public GlobalVal {
 private:
-    int len;
-    FuncType type;
     string label;
     string str;
 public:
-    explicit GlobalString(string str, FuncType type) {
+    explicit GlobalString(const string& str) {
         genLabel();
-        this->len = str.length();
-        this->type = type;
+        setFuncType(FuncType::INT8);
         this->str = str;
         GLOBALSTRINGS.insert(this);
     }
@@ -29,20 +26,16 @@ public:
         return label;
     }
 
-    string getLenString() {
-        return to_string(len);
-    }
-
-    string getTypeString() {
-        return FuncType2String.at(type);
-    }
-
     void genLabel() {
         label = getPrefix() + "_str_" + to_string(GLOBALSTRINGS.size());
     }
 
     string getStr() {
         return str;
+    }
+
+    string toString() override {
+        return label + " = constant " + "[" + to_string(str.length()) + " x " + FuncType2String.at(getFuncType()) + "] c\"" + getStr() + "\"";
     }
 };
 #endif //TAYILER_GLOBALSTRING_H

@@ -20,11 +20,11 @@ public:
         setFuncType(retType);
         this->ident = move(ident);
         this->retType = retType;
-        parent->addInstr(this);
         uses = new vector<Use*>;
         for (auto i : values) {
             uses->emplace_back(new Use(i));
         }
+        parent->addInstr(this);
     }
 
     string toString() override {
@@ -32,7 +32,7 @@ public:
         string str = "call " + FuncType2String.at(retType) + " @" + ident + "(";
         for (int i = 0; i < uses->size(); i++) {
             if (i != 0) str += ", ";
-            str += uses->at(i)->getValue()->getFuncTypeString() + " " + uses->at(i)->getValue()->getVal();
+            str += FuncType2String.at(uses->at(i)->getValue()->getFuncType()) + " " + uses->at(i)->getValue()->getVal();
         }
         str += ")";
         return str;

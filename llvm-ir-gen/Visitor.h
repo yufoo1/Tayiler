@@ -15,58 +15,54 @@
 #include "llvm-ir/instr/PutstrInstr.h"
 #include "llvm-ir/instr/PutintInstr.h"
 #include "llvm-ir/instr/CallInstr.h"
+#include "llvm-ir/global-val/GlobalInt.h"
 
 class Visitor {
 public:
-    Visitor(Node* root) {
+    Visitor(Node* root, const char *outputFile) {
         manager = new Manager;
         visitAst(root);
-        manager->dumpLLVM("llvm.ll");
+        manager->dumpLLVM(outputFile);
     }
 
 private:
     Manager* manager;
     BasicBlock* curBasicBlock;
     SymbolTable* curSymbolTable;
-    map<string, AllocaInstr*> ident2AllocaInstr; /* TODO  need merge into SymbolTable */
     Function* curFunction;
+    map<string, AllocaInstr*> ident2AllocaInstr; /* TODO  need merge into SymbolTable */
 
     void visitAst(Node* root) {
         visitCompUnit(dynamic_cast<CompUnitNode *>(root));
     }
 
     void visitCompUnit(CompUnitNode* node) {
-        for (auto i : (node->getDeclVec())) visitDecl(dynamic_cast<DeclNode *>(i));
+        for (auto i : (node->getDeclVec())) visitDecl(dynamic_cast<DeclNode *>(i), true);
         for (auto i : (node->getFuncDefVec())) visitFuncDef(dynamic_cast<FuncDefNode *>(i));
         visitMainFuncDef(node->getMainFuncDef());
     }
 
     void visitFuncDef(FuncDefNode* node) {
-        auto *params = new vector<Param*>;
         auto* entry = new BasicBlock();
         curBasicBlock = entry;
         curSymbolTable = new SymbolTable(curSymbolTable);
+        auto *params = new vector<Param*>;
         if (node->getFunFParams() != nullptr) {
             for (auto i : node->getFunFParams()->getFuncFParams()) {
                 auto* param = new Param(dynamic_cast<FuncFParamNode*>(i)->getIdent(), SyntaxType2FuncType.at(dynamic_cast<FuncFParamNode*>(i)->getBType()->getChild()->getType()));
                 params->emplace_back(param);
             }
         }
-        auto* function = new Function(node->getIdent(), params, SyntaxType2FuncType.at(node->getFuncType()->getTokenType()));
-        manager->addFunction(function);
-        function->setBody(entry);
-        function->addBasicBlock(entry);
+        auto* function = new Function(entry, node->getIdent(), params, SyntaxType2FuncType.at(node->getFuncType()->getTokenType()));
         curFunction = function;
-        entry->setFunction(curFunction);
+        manager->addFunction(function);
         for (auto i : *params) {
-            auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, i->getIdent(), i->getType(), false, true, curFunction->genInstrIdx());
+            auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, i->getIdent(), i->getFuncType(), false, true, curFunction->genInstrIdx());
             ident2AllocaInstr.insert({allocInstr->getIdent(), allocInstr});
             i->setVal(allocInstr->getVal());
         }
         visitBlock(node->getBlock());
     }
-
-
 
     void visitMainFuncDef(MainFuncDefNode* node) {
         FuncType retType = FuncType::INT32;
@@ -74,12 +70,9 @@ private:
         string ident = ReservedWordMapReversed.at(SyntaxType::MAINTK);
         curBasicBlock = entry;
         curSymbolTable = new SymbolTable(curSymbolTable);
-        auto* function = new Function(ident, retType);
+        auto* function = new Function(curBasicBlock, ident, nullptr, retType);
         manager->addFunction(function);
-        function->setBody(entry);
-        function->addBasicBlock(entry);
         curFunction = function;
-        entry->setFunction(curFunction);
         visitBlock(node->getBlock());
 //        if (curBasicBlock.isTerminated()) {
 //
@@ -98,7 +91,7 @@ private:
     void visitBlockItem(BlockItemNode* node) {
         switch (node->getChild()->getType()) {
             case SyntaxType::STMT: visitStmt(dynamic_cast<StmtNode *>(node->getChild())); break;
-            case SyntaxType::DECL: visitDecl(dynamic_cast<DeclNode *>(node->getChild())); break;
+            case SyntaxType::DECL: visitDecl(dynamic_cast<DeclNode *>(node->getChild()), false); break;
             default: error();
         }
     }
@@ -121,7 +114,7 @@ private:
     }
 
     void visitBlockStmt(StmtNode* node) {
-
+        visitBlock(node->getBlock());
     }
 
     void visitBreakStmt(StmtNode* node) {
@@ -133,7 +126,7 @@ private:
     }
 
     Value* visitExpStmt(StmtNode* node) {
-        visitExp(node->getExps().front());
+        return visitExp(node->getExps().front());
     }
 
     void visitGetintStmt(StmtNode* node) {
@@ -165,7 +158,7 @@ private:
                 str += formatString.at(i);
             } else if (formatString.at(i) == '\"' && !str.empty() || formatString.at(i) == '%') {
                 if (!str.empty()) {
-                    auto* globalString = new GlobalString(str, FuncType::INT8);
+                    auto* globalString = new GlobalString(str);
                     GLOBALSTRINGS.insert(globalString);
                     auto* instr = new GetElementPtrInstr(curBasicBlock, globalString, curFunction->genInstrIdx());
                     new PutstrInstr(curBasicBlock, instr);
@@ -200,30 +193,35 @@ private:
 
     }
 
-    void visitDecl(DeclNode* node) {
+    void visitDecl(DeclNode* node, bool isGlobal) {
         switch (node->getChild()->getType()) {
-            case SyntaxType::CONSTDECL: visitConstDecl(dynamic_cast<ConstDeclNode *>(node->getChild())); break;
-            case SyntaxType::VARDECL: visitVarDecl(dynamic_cast<VarDeclNode *>(node->getChild())); break;
+            case SyntaxType::CONSTDECL: visitConstDecl(dynamic_cast<ConstDeclNode *>(node->getChild()), true, isGlobal); break;
+            case SyntaxType::VARDECL: visitVarDecl(dynamic_cast<VarDeclNode *>(node->getChild()), false, isGlobal); break;
             default: error(); break;
         }
     }
 
-    void visitConstDecl(ConstDeclNode* node) {
-
+    void visitConstDecl(ConstDeclNode* node, bool isConstant, bool isGlobal) {
+        FuncType type = visitBType(node->getBType());
+        vector<Node*> varDefs = node->getConstDefs();
+        for (auto i : varDefs) visitVarDef(dynamic_cast<VarDefNode *>(i), type, isConstant, isGlobal);
     }
 
-    void visitVarDecl(VarDeclNode* node) {
+    void visitVarDecl(VarDeclNode* node, bool isConstant, bool isGlobal) {
         FuncType type = visitBType(node->getBType());
         vector<Node*> varDefs = node->getVarDefs();
-        for (auto i : varDefs) visitVarDef(dynamic_cast<VarDefNode *>(i), type);
+        for (auto i : varDefs) visitVarDef(dynamic_cast<VarDefNode *>(i), type, isConstant, isGlobal);
     }
 
-    void visitVarDef(VarDefNode* node, FuncType type) {
+    void visitVarDef(VarDefNode* node, FuncType type, bool isConstant, bool isGlobal) {
         /* TODO: without array */
-        AllocaInstr* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, false, false, curFunction->genInstrIdx());
+        auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, isConstant, false, curFunction->genInstrIdx());
         ident2AllocaInstr.insert({allocInstr->getIdent(), allocInstr});
         if (node->getInitVal() != nullptr) {
             new StoreInstr(curBasicBlock, allocInstr, visitInitVal(node->getInitVal()));
+        }
+        if (isGlobal) {
+            GLOBALINTS.insert(new GlobalInt(allocInstr));
         }
     }
 
@@ -289,7 +287,7 @@ private:
                     values.emplace_back(visitExp(dynamic_cast<ExpNode *>(i)));
                 }
             }
-            new CallInstr(curBasicBlock, manager->getFunction(node->getIdent())->getIdent(), manager->getFunction(node->getIdent())->getRetType(), values);
+            return new CallInstr(curBasicBlock, manager->getFunction(node->getIdent())->getIdent(), manager->getFunction(node->getIdent())->getRetType(), values);
         } else if (node->getUnaryOp() != SyntaxType::NONE) {
             Value* unaryExp = visitUnaryExp(node->getUnaryExp());
             unaryExp->setFuncType(FuncType::INT32);
@@ -301,7 +299,7 @@ private:
             }
             return unaryExp;
         } else {
-            error(); return {};
+            error(); return { };
         }
     }
 
@@ -313,7 +311,7 @@ private:
         } else if (node->getNumber() != nullptr) {
             return visitNumber(node->getNumber());
         } else {
-            error(); return {};
+            error(); return { };
         }
     }
 

@@ -9,21 +9,14 @@
 #include "../Value.h"
 
 class ConstantInt: public Constant {
-private:
-    int intVal;
 public:
     explicit ConstantInt(const string& val) {
-        setIntVal(stoi(val));
         setVal(val);
         setFuncType(FuncType::INT32);
     }
 
     int getIntVal() {
-        return intVal;
-    }
-
-    void setIntVal(int intVal) {
-        this->intVal = intVal;
+        return stoi(getVal());
     }
 };
 ConstantInt* CONSTANT_ZERO = new ConstantInt("0");

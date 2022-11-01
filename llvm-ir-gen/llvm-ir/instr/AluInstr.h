@@ -20,7 +20,7 @@ public:
         useSrc2 = new Use(src2);
         setFuncType(FuncType::INT32);
         this->op = op;
-        genInstrVal(idx);
+        genInstrVirtualReg(idx);
         parent->addInstr(this);
     }
 
@@ -36,7 +36,7 @@ public:
     }
 
     string toString() override {
-        return getVal() + " = " + getOpString() + " " + useSrc1->getValue()->getFuncTypeString() + " " + useSrc1->getValue()->getVal() + ", " + useSrc2->getValue()->getVal();
+        return getVal() + " = " + getOpString() + " " + FuncType2String.at(useSrc1->getValue()->getFuncType()) + " " + useSrc1->getValue()->getVal() + ", " + useSrc2->getValue()->getVal();
     }
 
     bool hasValue() override {
