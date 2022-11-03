@@ -20,12 +20,16 @@ public:
         parent->addInstr(this);
     }
 
-    std::string toString() override {
+    string toLlvmString() override {
         if (hasValue()) {
             return "ret " + retUse->getValue()->getVal();
         } else {
             return "ret void";
         }
+    }
+
+    string toMipsString() override {
+        return "";
     }
 
     bool hasValue() override {

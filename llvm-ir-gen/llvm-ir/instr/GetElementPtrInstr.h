@@ -20,10 +20,13 @@ public:
         parent->addInstr(this);
     }
 
-    string toString() {
+    string toLlvmString() {
         return getVal() + " = getelementptr inbounds " + "[" + to_string(globalString->getStr().length()) + " x " + FuncType2String.at(globalString->getFuncType()) + "], " + "[" +
-                to_string(globalString->getStr().length()) + " x " + FuncType2String.at(globalString->getFuncType()) + "]* " + globalString->getLabel() + ", i32 0, i32 0";
+                to_string(globalString->getStr().length()) + " x " + FuncType2String.at(globalString->getFuncType()) + "]* " + globalString->getPrefix() + globalString->getLabel() + ", i32 0, i32 0";
+    }
 
+    string toMipsString() {
+        return "\tla $a0, " + globalString->getLabel() + "\n";
     }
 };
 #endif //TAYILER_GETELEMENTPTRINSTR_H

@@ -18,9 +18,13 @@ public:
         parent->addInstr(this);
     }
 
-    string toString() override {
+    string toLlvmString() override {
         return "call " + FuncType2String.at(getFuncType()) + " @putstr" + "(" +
                FuncType2String.at(use->getValue()->getFuncType()) + "* " + use->getValue()->getVal() + ")";
+    }
+
+    string toMipsString() override {
+        return "\tli $v0, 4\n\tsyscall\n";
     }
 };
 #endif //TAYILER_PUTSTRINSTR_H

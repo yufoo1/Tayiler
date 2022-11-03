@@ -23,7 +23,7 @@ public:
         return allocaUse;
     }
 
-    string toString() override {
+    string toLlvmString() override {
 
     }
 };

@@ -8,7 +8,6 @@
 #include "Instr.h"
 #include "../../symbol/SymbolTable.h"
 #include "../../symbol/SymbolTerm.h"
-
 class AllocaInstr: public Instr {
 private:
     string ident;
@@ -27,8 +26,13 @@ public:
         return ident;
     }
 
-    string toString() override {
+    string toLlvmString() override {
         return isParam ? "" : getVal() + " = alloca " + FuncType2String.at(getFuncType());
+    }
+
+    string toMipsString() override {
+        ALLOCSTACK(this);
+        return { };
     }
 };
 #endif //TAYILER_ALLOCAINSTR_H

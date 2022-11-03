@@ -19,9 +19,13 @@ public:
         parent->addInstr(this);
     }
 
-    string toString() override {
+    string toLlvmString() override {
         return "call " + FuncType2String.at(getFuncType()) + " @getint" + "(" +
                FuncType2String.at(use->getValue()->getFuncType()) + " " + use->getValue()->getVal() + ")";
+    }
+
+    string toMipsString() override {
+        return "";
     }
 };
 #endif //TAYILER_GETINTINSTR_H

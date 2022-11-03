@@ -6,6 +6,7 @@
 #define TAYILER_ALUINSTR_H
 #include "Instr.h"
 #include "../BasicBlock.h"
+#include "../../Visitor.h"
 
 class AluInstr: public Instr {
 private:
@@ -35,8 +36,45 @@ public:
         }
     }
 
-    string toString() override {
+    string toLlvmString() override {
         return getVal() + " = " + getOpString() + " " + FuncType2String.at(useSrc1->getValue()->getFuncType()) + " " + useSrc1->getValue()->getVal() + ", " + useSrc2->getValue()->getVal();
+    }
+
+    string toMipsString() override {
+        ALLOCSTACK(this);
+        string s;
+        switch (op) {
+            case SyntaxType::PLUS:
+                string s;
+                if (useSrc1->getValue()->isInstr()) {
+                    int rsPos = STACKPOSMAP.at(useSrc1->getValue());
+                    s += "\tlw $t0, " + to_string(rsPos) + "($sp)\n";
+                } else {
+                    s += "\tori $t0, $0, " + useSrc1->getValue()->getVal();
+                }
+                if (useSrc2->getValue()->isInstr()) {
+                    int rtPos = STACKPOSMAP.at(useSrc2->getValue());
+                    s += "\tlw $t1, " + to_string(rtPos) + "($sp)\n";
+                } else {
+                    s += "\tori $t1, $0, " + useSrc2->getValue()->getVal() + "\n";
+                }
+                ALLOCSTACK(this);
+                int rdPos = STACKPOSMAP.at(this);
+                s += "\tadd $t0, $t0, $t1\n";
+                s += "\tsw $t0, " + to_string(rdPos) + "($sp)\n";
+                return s;
+//            case SyntaxType::MINU:
+//                break;
+//            case SyntaxType::MULT:
+//                break;
+//            case SyntaxType::DIV:
+//                break;
+//            case SyntaxType::MOD:
+//                break;
+//            default: break;
+        }
+
+        return "";
     }
 
     bool hasValue() override {

@@ -5,7 +5,6 @@
 #ifndef TAYILER_FUNCTION_H
 #define TAYILER_FUNCTION_H
 
-#include <utility>
 
 #include "Value.h"
 #include "instr/AluInstr.h"
@@ -79,7 +78,7 @@ public:
         return entry != nullptr;
     }
 
-    string toString() override {
+    string toLlvmString() override {
         string s = "define dso_local ";
         s += FuncType2String.at(retType) + " @" + getIdent() + "(";
         if (params != nullptr) {
@@ -92,11 +91,23 @@ public:
         for (auto i : basicBlocks) {
             s += i->getLabel() + ":\n";
             for (auto j : i->getInstrs()) {
-                string str = j->toString();
-                if (!str.empty()) s += "\t" + j->toString() + "\n";
+                string str = j->toLlvmString();
+                if (!str.empty()) s += "\t" + str + "\n";
             }
         }
         s += "}\n";
+        return s;
+    }
+
+    string toMipsString() override {
+        string s;
+        for (auto i : basicBlocks) {
+            s += i->getLabel() + ":\n";
+            for (auto j : i->getInstrs()) {
+                string str = j->toMipsString();
+                s += str;
+            }
+        }
         return s;
     }
 };

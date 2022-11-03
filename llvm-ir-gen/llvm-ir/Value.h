@@ -4,8 +4,6 @@
 
 #ifndef TAYILER_VALUE_H
 #define TAYILER_VALUE_H
-#include "set"
-
 class Value {
 private:
     FuncType funcType;
@@ -33,7 +31,11 @@ public:
         return funcType;
     }
 
-    virtual string toString() { }
+    virtual string toLlvmString() { }
+
+    virtual string toMipsString() { }
+
+    virtual bool isInstr() { };
 
 };
 #endif //TAYILER_VALUE_H

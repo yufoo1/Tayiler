@@ -27,15 +27,19 @@ public:
     }
 
     void genLabel() {
-        label = getPrefix() + "_str_" + to_string(GLOBALSTRINGS.size());
+        label = "str_" + to_string(GLOBALSTRINGS.size());
     }
 
     string getStr() {
         return str;
     }
 
-    string toString() override {
+    string toLlvmString() override {
         return label + " = constant " + "[" + to_string(str.length()) + " x " + FuncType2String.at(getFuncType()) + "] c\"" + getStr() + "\"";
+    }
+
+    string toMipsString() override {
+        return label + ": .asciiz \"" + str + "\"";
     }
 };
 #endif //TAYILER_GLOBALSTRING_H

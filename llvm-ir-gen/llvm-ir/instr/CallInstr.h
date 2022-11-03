@@ -27,7 +27,7 @@ public:
         parent->addInstr(this);
     }
 
-    string toString() override {
+    string toLlvmString() override {
         assert(retType == FuncType::VOID);
         string str = "call " + FuncType2String.at(retType) + " @" + ident + "(";
         for (int i = 0; i < uses->size(); i++) {
@@ -37,5 +37,10 @@ public:
         str += ")";
         return str;
     }
+
+    string toMipsString() override {
+        return "";
+    }
+
 };
 #endif //TAYILER_CALLINSTR_H
