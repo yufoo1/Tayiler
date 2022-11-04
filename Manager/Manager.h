@@ -22,8 +22,8 @@ public:
         functions.insert({function->getIdent(), function});
     }
 
-    void dumpLlvm(const char *outputFile) {
-        ofstream f(outputFile);
+    void dumpLlvm(const char *llvmFile) {
+        ofstream f(llvmFile);
         f << "declare i32 @getint()\ndeclare void @putint(i32)\ndeclare void @putstr(i8*)\n" << endl;
         for (auto i : GLOBALSTRINGS) {
             f << i->toLlvmString() << endl;
@@ -47,10 +47,11 @@ public:
             for (auto i : GLOBALSTRINGS) f << "\t" + i->toMipsString() << endl;
         }
         f << ".text" << endl;
+        f << "\tj " + mainFunction->getEntry()->getLabel() + "\n";
         for (auto i : functions) {
-            cout << i.second->toMipsString() << endl;
+            f << i.second->toMipsString();
         }
-        f << mainFunction->toMipsString() << endl;
+        f << mainFunction->toMipsString();
         f << "\tli $v0, 10\n\tsyscall" << endl;
     }
 

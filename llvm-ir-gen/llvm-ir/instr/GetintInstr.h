@@ -11,21 +11,26 @@
 
 class GetintInstr: public Instr {
 private:
-    Use* use;
+    Use* tarUse;
 public:
     explicit GetintInstr(BasicBlock* parent, Value* val) {
-        this->use = new Use(val);
+        this->tarUse = new Use(val);
         this->setFuncType(FuncType::INT32);
         parent->addInstr(this);
     }
 
     string toLlvmString() override {
         return "call " + FuncType2String.at(getFuncType()) + " @getint" + "(" +
-               FuncType2String.at(use->getValue()->getFuncType()) + " " + use->getValue()->getVal() + ")";
+               FuncType2String.at(tarUse->getValue()->getFuncType()) + " " + tarUse->getValue()->getVal() + ")";
     }
 
     string toMipsString() override {
-        return "";
+        string s;
+        s += "\tli $v0, 5\n";
+        s += "\tsyscall\n";
+        int tarPos = STACKPOSMAP.at(tarUse->getValue());
+        s += "\tsw $v0, " + to_string(tarPos) + "($sp)\n";
+        return s;
     }
 };
 #endif //TAYILER_GETINTINSTR_H

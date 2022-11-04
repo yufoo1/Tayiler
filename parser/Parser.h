@@ -605,7 +605,7 @@ public:
         Node* root = new CompUnitNode;
         syntaxTree = new SyntaxTree(root);
         genNode(root, SyntaxType::COMPUNIT);
-        fileWrite(outputFile);
+//        fileWrite(outputFile);
     }
 
     Node* getSyntaxTreeRoot() {

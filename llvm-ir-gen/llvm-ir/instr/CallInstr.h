@@ -9,27 +9,26 @@
 
 #include <utility>
 #include "../BasicBlock.h"
-
 class CallInstr: public Instr {
 private:
-    string ident;
-    FuncType retType;
+    Function* function;
     vector<Use*>* uses;
+    vector<AllocaInstr*>* allocaInstrs;
 public:
-    explicit CallInstr(BasicBlock* parent, string ident, FuncType retType, const vector<Value*>& values) {
-        setFuncType(retType);
-        this->ident = move(ident);
-        this->retType = retType;
-        uses = new vector<Use*>;
-        for (auto i : values) {
-            uses->emplace_back(new Use(i));
+    explicit CallInstr(BasicBlock* parent, Function* function, vector<Value*>* values, vector<AllocaInstr*>* allocaInstrs) {
+        setFuncType(function->getRetType());
+        this->function = function;
+        this->uses = new vector<Use*>;
+        for (auto i : *values) {
+            this->uses->emplace_back(new Use(i));
         }
+        this->allocaInstrs = allocaInstrs;
         parent->addInstr(this);
     }
 
     string toLlvmString() override {
-        assert(retType == FuncType::VOID);
-        string str = "call " + FuncType2String.at(retType) + " @" + ident + "(";
+        assert(function->getRetType() == FuncType::VOID);
+        string str = "call " + FuncType2String.at(function->getRetType()) + " @" + function->getIdent() + "(";
         for (int i = 0; i < uses->size(); i++) {
             if (i != 0) str += ", ";
             str += FuncType2String.at(uses->at(i)->getValue()->getFuncType()) + " " + uses->at(i)->getValue()->getVal();
@@ -39,7 +38,19 @@ public:
     }
 
     string toMipsString() override {
-        return "";
+        string s;
+        for (int i = 0; i < uses->size(); i++) {
+            if (STACKPOSMAP.count(uses->at(i)->getValue())) {
+                int srcPos = STACKPOSMAP.at(uses->at(i)->getValue());
+                s += "\tlw $t0, " + to_string(srcPos) + "($sp)\n";
+            } else {
+                s += "\tori $t0, $0, " + uses->at(i)->getValue()->getVal() + "\n";
+            }
+            int tarPos = STACKPOSMAP.at(allocaInstrs->at(i));
+            s += "\tsw $t0, " + to_string(tarPos) + "($sp)\n";
+        }
+        s += "\tjal " + function->getEntry()->getLabel() + "\n";
+        return s;
     }
 
 };

@@ -18,7 +18,7 @@ public:
     }
 
     bool isInstr() override {
-        return true;
+        return false;
     }
 };
 #endif //TAYILER_GLOBALVAL_H

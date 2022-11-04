@@ -10,7 +10,7 @@
 
 class ConstDefNode: public Node {
 private:
-    string ident = nullptr;
+    string ident;
     vector<Node*> constExps;
     Node* constInitVal = nullptr;
 public:

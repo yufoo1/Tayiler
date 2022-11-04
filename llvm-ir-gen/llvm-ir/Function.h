@@ -34,9 +34,11 @@ private:
     BasicBlock* entry = nullptr;
     list<BasicBlock*> basicBlocks;
     BasicBlock* retBasicBlock = nullptr;
+    SymbolTable* symbolTable = nullptr;
     int localInstrCnt;
 public:
-    explicit Function(BasicBlock* entry, string ident, vector<Param*>* params, FuncType retType) {
+    explicit Function(BasicBlock* entry, SymbolTable* symbolTable, string ident, vector<Param*>* params, FuncType retType) {
+        this->symbolTable = symbolTable;
         this->ident = move(ident);
         this->params = params;
         this->retType = retType;
@@ -76,6 +78,10 @@ public:
 
     bool hasEntry() {
         return entry != nullptr;
+    }
+
+    SymbolTable* getSymbolTable() {
+        return symbolTable;
     }
 
     string toLlvmString() override {

@@ -9,14 +9,12 @@
 
 class ReturnInstr: public Instr {
 private:
+    bool isMain;
     Use* retUse = nullptr;
 public:
-    explicit ReturnInstr(BasicBlock* parent, Value* retValue) {
-        retUse = new Use(retValue);
-        parent->addInstr(this);
-    }
-
-    explicit ReturnInstr(BasicBlock* parent) {
+    explicit ReturnInstr(BasicBlock* parent, Value* retValue, bool isMain) {
+        if (retValue != nullptr) retUse = new Use(retValue);
+        this->isMain = isMain;
         parent->addInstr(this);
     }
 
@@ -29,7 +27,19 @@ public:
     }
 
     string toMipsString() override {
-        return "";
+        string s;
+        if (!isMain) {
+            if (retUse != nullptr) {
+                if (retUse->getValue()->isInstr()) {
+                    int retPos = STACKPOSMAP.at(retUse->getValue());
+                    s += "\tlw $v0, " + to_string(retPos) + "($sp)\n";
+                } else {
+                    s += "\tori $v0, $0, " + retUse->getValue()->getVal() + "\n";
+                }
+            }
+            s += "\tjr $ra\n";
+        }
+        return s;
     }
 
     bool hasValue() override {
