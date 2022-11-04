@@ -19,7 +19,7 @@ public:
     }
 
     string toLlvmString() override {
-        return "call " + FuncType2String.at(getFuncType()) + " @putint" + "(" +
+        return "call void @putint(" +
                FuncType2String.at(use->getValue()->getFuncType()) + " " + use->getValue()->getVal() + ")";
     }
 

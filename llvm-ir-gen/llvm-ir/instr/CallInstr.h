@@ -27,8 +27,11 @@ public:
     }
 
     string toLlvmString() override {
-        assert(function->getRetType() == FuncType::VOID);
-        string str = "call " + FuncType2String.at(function->getRetType()) + " @" + function->getIdent() + "(";
+        string str;
+        if (function->getRetType() != FuncType::VOID) {
+            str += getVal() + " = ";
+        }
+        str += "call " + FuncType2String.at(function->getRetType()) + " @" + function->getIdent() + "(";
         for (int i = 0; i < uses->size(); i++) {
             if (i != 0) str += ", ";
             str += FuncType2String.at(uses->at(i)->getValue()->getFuncType()) + " " + uses->at(i)->getValue()->getVal();

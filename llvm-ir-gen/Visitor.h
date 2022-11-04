@@ -52,7 +52,8 @@ private:
                 params->emplace_back(param);
             }
         }
-        auto* function = new Function(entry, curSymbolTable, node->getIdent(), params, SyntaxType2FuncType.at(node->getFuncType()->getTokenType()));
+        auto retParam = new Param("", SyntaxType2FuncType.at(node->getFuncType()->getTokenType()));
+        auto* function = new Function(entry, curSymbolTable, node->getIdent(), params, retParam, SyntaxType2FuncType.at(node->getFuncType()->getTokenType()));
         curFunction = function;
         manager->addFunction(function);
         for (auto i : *params) {
@@ -60,6 +61,8 @@ private:
             SYMBOLTABLE2IDENT2ALLOCAINSTR.at(curSymbolTable)->insert({allocInstr->getIdent(), allocInstr});
             i->setVal(allocInstr->getVal());
         }
+        auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, retParam->getIdent(), retParam->getFuncType(), false, true, curFunction->genInstrIdx());
+        SYMBOLTABLE2IDENT2ALLOCAINSTR.at(curSymbolTable)->insert({allocInstr->getIdent(), allocInstr});
         visitBlock(node->getBlock());
     }
 
@@ -70,7 +73,7 @@ private:
         curBasicBlock = entry;
         curSymbolTable = new SymbolTable(curSymbolTable);
         SYMBOLTABLE2IDENT2ALLOCAINSTR.insert({curSymbolTable, new map<string, AllocaInstr *>});
-        auto* function = new Function(curBasicBlock, curSymbolTable, ident, nullptr, retType);
+        auto* function = new Function(curBasicBlock, curSymbolTable, ident, nullptr, nullptr, retType);
         manager->setMainFunction(function);
         curFunction = function;
         visitBlock(node->getBlock());
@@ -176,6 +179,7 @@ private:
 
     void visitReturnStmt(StmtNode* node) {
         new ReturnInstr(curBasicBlock, node->getExps().empty() ? nullptr : visitExp(node->getExps().front()),
+                        curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK) ? nullptr : SYMBOLTABLE2IDENT2ALLOCAINSTR.at(manager->getFunction(curFunction->getIdent())->getSymbolTable())->at(""),
                         curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK));
     }
 
@@ -204,7 +208,6 @@ private:
     void visitConstDef(ConstDefNode* node, FuncType type, bool isConstant, bool isGlobal) {
         /* TODO: without array */
         auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, isConstant, false, curFunction->genInstrIdx());
-        SYMBOLTABLE2IDENT2ALLOCAINSTR.at(curSymbolTable)->insert({allocInstr->getIdent(), allocInstr});
         new StoreInstr(curBasicBlock, allocInstr, visitConstInitVal(node->getConstInitVal()));
         if (isGlobal) {
             GLOBALINTS.insert(new GlobalInt(allocInstr));
@@ -303,7 +306,8 @@ private:
                         SYMBOLTABLE2IDENT2ALLOCAINSTR.at(manager->getFunction(node->getIdent())->getSymbolTable())->at(
                                 i->getIdent()));
             }
-            return new CallInstr(curBasicBlock, manager->getFunction(node->getIdent()), values, allocaInstrs);
+            new CallInstr(curBasicBlock, manager->getFunction(node->getIdent()), values, allocaInstrs);
+            return SYMBOLTABLE2IDENT2ALLOCAINSTR.at(manager->getFunction(node->getIdent())->getSymbolTable())->at("");
         } else if (node->getUnaryOp() != SyntaxType::NONE) {
             Value* unaryExp = visitUnaryExp(node->getUnaryExp());
             unaryExp->setFuncType(FuncType::INT32);
@@ -332,9 +336,9 @@ private:
     }
 
     Value* visitNumber(NumberNode* node) {
-        Value* value = new ConstantInt(node->getChild()->getVal());
-        new AluInstr(curBasicBlock, CONSTANT_ZERO, value, SyntaxType::PLUS, curFunction->genInstrIdx());
-        return value;
+        ConstantInt* constantInt = new ConstantInt(node->getChild()->getVal());
+        AluInstr* aluInstr = new AluInstr(curBasicBlock, CONSTANT_ZERO, constantInt, SyntaxType::PLUS, curFunction->genInstrIdx());
+        return aluInstr;
     }
 
 //    Value trimTo(Value value, FuncType targetType) {

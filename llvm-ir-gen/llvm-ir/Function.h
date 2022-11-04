@@ -30,6 +30,7 @@ class Function: public Value {
 private:
     string ident;
     vector<Param*>* params = nullptr;
+    Param* retParam = nullptr;
     FuncType retType;
     BasicBlock* entry = nullptr;
     list<BasicBlock*> basicBlocks;
@@ -37,10 +38,11 @@ private:
     SymbolTable* symbolTable = nullptr;
     int localInstrCnt;
 public:
-    explicit Function(BasicBlock* entry, SymbolTable* symbolTable, string ident, vector<Param*>* params, FuncType retType) {
+    explicit Function(BasicBlock* entry, SymbolTable* symbolTable, string ident, vector<Param*>* params, Param* retParam, FuncType retType) {
         this->symbolTable = symbolTable;
         this->ident = move(ident);
         this->params = params;
+        this->retParam = retParam;
         this->retType = retType;
         this->localInstrCnt = 0;
         setBody(entry);
@@ -58,6 +60,10 @@ public:
 
     vector<Param*>* getParams() {
         return params;
+    }
+
+    Param* getRetParam() {
+        return retParam;
     }
 
     FuncType getRetType() {
