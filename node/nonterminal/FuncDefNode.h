@@ -8,7 +8,6 @@
 #include "../Node.h"
 #include "FuncTypeNode.h"
 #include "FuncFParamsNode.h"
-
 class FuncDefNode: public Node{
 private:
     Node* funcType = nullptr;
@@ -26,10 +25,10 @@ public:
 
     void insertNode(Node* node) override {
         switch (node->getType()) {
-            case SyntaxType::FUNCTYPE: assert(funcType == nullptr), funcType = node; break;
-            case SyntaxType::IDENFR: assert(ident.empty()), ident = node->getVal(); break;
-            case SyntaxType::FUNCFPARAMS: assert(funcFParams == nullptr), funcFParams = node; break;
-            case SyntaxType::BLOCK: assert(block == nullptr), block = node; break;
+            case SyntaxType::FUNCTYPE: YASSERT(funcType == nullptr) funcType = node; break;
+            case SyntaxType::IDENFR: YASSERT(ident.empty()) ident = node->getVal(); break;
+            case SyntaxType::FUNCFPARAMS: YASSERT(funcFParams == nullptr) funcFParams = node; break;
+            case SyntaxType::BLOCK: YASSERT(block == nullptr) block = node; break;
             default: break;
         }
     }

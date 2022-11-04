@@ -11,7 +11,7 @@
 
 class GetElementPtrInstr: public Instr {
 private:
-    GlobalString* globalString;
+    GlobalString* globalString = nullptr;
 public:
     explicit GetElementPtrInstr(BasicBlock* parent, GlobalString* globalString, int idx) {
         genInstrVirtualReg(idx);

@@ -22,8 +22,8 @@ public:
     
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::EXP: assert(initVals.empty() && exp == nullptr), exp = node; break;
-            case SyntaxType::INITVAL: assert(exp == nullptr), initVals.emplace_back(node); break;
+            case SyntaxType::EXP: YASSERT(initVals.empty() && exp == nullptr) exp = node; break;
+            case SyntaxType::INITVAL: YASSERT(exp == nullptr) initVals.emplace_back(node); break;
             default: break;
         }
     }

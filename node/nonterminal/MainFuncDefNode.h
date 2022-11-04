@@ -22,7 +22,7 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::BLOCK: assert(block == nullptr), block = node; break;
+            case SyntaxType::BLOCK: YASSERT(block == nullptr) block = node; break;
             default: break;
         }
     }

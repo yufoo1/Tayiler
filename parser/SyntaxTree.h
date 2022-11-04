@@ -81,7 +81,7 @@
 
 class SyntaxTree {
 private:
-    Node* root;
+    Node* root = nullptr;
 public:
     explicit SyntaxTree(Node* root) {
         this->root = root;

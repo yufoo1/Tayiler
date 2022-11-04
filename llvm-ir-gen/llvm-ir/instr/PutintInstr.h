@@ -10,7 +10,7 @@
 
 class PutintInstr: public Instr{
 private:
-    Use* use;
+    Use* use = nullptr;
 public:
     explicit PutintInstr(BasicBlock* parent, Value* val) {
         this->use = new Use(val);

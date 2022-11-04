@@ -24,10 +24,10 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::BTYPE: assert(bType == nullptr), bType = node; break;
-            case SyntaxType::IDENFR: assert(ident.empty()), ident = node->getVal(); break;
+            case SyntaxType::BTYPE: YASSERT(bType == nullptr) bType = node; break;
+            case SyntaxType::IDENFR: YASSERT(ident.empty()) ident = node->getVal(); break;
             case SyntaxType::LBRACK: isArray = true; break;
-            case SyntaxType::CONSTEXP: assert(isArray), constExps.emplace_back(node); break;
+            case SyntaxType::CONSTEXP: YASSERT(isArray) constExps.emplace_back(node); break;
             default: break;
         }
     }

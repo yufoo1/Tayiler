@@ -29,20 +29,20 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::IFTK: assert(stmtType == StmtType::NONE), stmtType = StmtType::IF; break;
-            case SyntaxType::WHILETK: assert(stmtType == StmtType::NONE), stmtType = StmtType::WHILE; break;
-            case SyntaxType::BREAKTK: assert(stmtType == StmtType::NONE), stmtType = StmtType::BREAK; break;
-            case SyntaxType::CONTINUETK: assert(stmtType == StmtType::NONE), stmtType = StmtType::CONTINUE; break;
-            case SyntaxType::RETURNTK: assert(stmtType == StmtType::NONE), stmtType = StmtType::RETURN; break;
-            case SyntaxType::GETINTTK: assert(stmtType == StmtType::LVALASSIGN), stmtType = StmtType::GETINT; break;
-            case SyntaxType::PRINTFTK: assert(stmtType == StmtType::NONE), stmtType = StmtType::PRINTF; break;
-            case SyntaxType::COND: assert(cond == nullptr), cond = node; break;
-            case SyntaxType::BLOCK: assert(cond == nullptr), block = node; stmtType = StmtType::BLOCK; break;
-            case SyntaxType::LVAL: assert(lVal == nullptr), lVal = node; stmtType = StmtType::LVALASSIGN; break;
+            case SyntaxType::IFTK: YASSERT(stmtType == StmtType::NONE) stmtType = StmtType::IF; break;
+            case SyntaxType::WHILETK: YASSERT(stmtType == StmtType::NONE) stmtType = StmtType::WHILE; break;
+            case SyntaxType::BREAKTK: YASSERT(stmtType == StmtType::NONE) stmtType = StmtType::BREAK; break;
+            case SyntaxType::CONTINUETK: YASSERT(stmtType == StmtType::NONE) stmtType = StmtType::CONTINUE; break;
+            case SyntaxType::RETURNTK: YASSERT(stmtType == StmtType::NONE) stmtType = StmtType::RETURN; break;
+            case SyntaxType::GETINTTK: YASSERT(stmtType == StmtType::LVALASSIGN) stmtType = StmtType::GETINT; break;
+            case SyntaxType::PRINTFTK: YASSERT(stmtType == StmtType::NONE) stmtType = StmtType::PRINTF; break;
+            case SyntaxType::COND: YASSERT(cond == nullptr) cond = node; break;
+            case SyntaxType::BLOCK: YASSERT(cond == nullptr) block = node; stmtType = StmtType::BLOCK; break;
+            case SyntaxType::LVAL: YASSERT(lVal == nullptr) lVal = node; stmtType = StmtType::LVALASSIGN; break;
             case SyntaxType::STMT: stmts.emplace_back(dynamic_cast<StmtNode *>(node));
             case SyntaxType::EXP: exps.emplace_back(dynamic_cast<ExpNode *>(node)); stmtType = stmtType == StmtType::NONE ? StmtType::EXP : stmtType; break;
             case SyntaxType::SEMICN: stmtType = stmtType == StmtType::NONE ? StmtType::SEMICN : stmtType; break;
-            case SyntaxType::STRCON: assert(formatString.empty()), formatString = node->getVal(); break;
+            case SyntaxType::STRCON: YASSERT(formatString.empty()) formatString = node->getVal(); break;
             default: break;
         }
     }

@@ -11,7 +11,7 @@
 
 class GetintInstr: public Instr {
 private:
-    Use* tarUse;
+    Use* tarUse = nullptr;
 public:
     explicit GetintInstr(BasicBlock* parent, Value* val) {
         this->tarUse = new Use(val);

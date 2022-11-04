@@ -16,7 +16,7 @@ using namespace std;
 class Lexer {
 private:
     vector<tuple<SyntaxType, string>> lexerList;
-    LexCursor* cursor;
+    LexCursor* cursor = nullptr;
     tuple<bool, SyntaxType, string> lex() {
         char first = cursor->scanToken();
         switch (first) {
@@ -118,8 +118,8 @@ private:
     }
 
 public:
-    explicit Lexer(const char *inputFile, const char *outputFile) {
-        cursor = new LexCursor(fileRead(inputFile));
+    explicit Lexer(ifstream* f) {
+        cursor = new LexCursor(fileRead(f));
         while (!cursor->judgeEnd()) {
             cursor->skipBlank();
             auto t = lex();
@@ -128,27 +128,24 @@ public:
                 cursor->skipBlank();
             }
         }
-//        fileWrite(outputFile);
     }
 
-    static string fileRead(const char *inputFile) {
-        ifstream f(inputFile);
-        if (!f.is_open()) {
-            cout << "error happened when open " << inputFile << "!" << endl;
+    static string fileRead(ifstream* f) {
+        if (!f->is_open()) {
+            cout << "error happened when open!" << endl;
         }
         string line, fileString;
-        while (getline(f, line)) {
+        while (getline(*f, line)) {
             fileString += line + "\n";
             line.clear();
         }
-        f.close();
+        f->close();
         return fileString;
     }
 
-    void fileWrite(const char *outputFile) {
-        ofstream f(outputFile);
+    void fileWrite(ofstream* f) {
         for (auto i : lexerList) {
-            f << SyntaxType2String.at(std::get<0>(i)) << " " << std::get<1>(i) << "\n";
+            *f << SyntaxType2String.at(std::get<0>(i)) << " " << std::get<1>(i) << "\n";
         }
     }
 

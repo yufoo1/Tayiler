@@ -31,11 +31,11 @@ public:
         return funcType;
     }
 
-    virtual string toLlvmString() { }
+    virtual string toLlvmString() { return ""; }
 
-    virtual string toMipsString() { }
+    virtual string toMipsString() { return ""; }
 
-    virtual bool isInstr() { };
+    virtual bool isInstr() { return false; };
 
 };
 #endif //TAYILER_VALUE_H

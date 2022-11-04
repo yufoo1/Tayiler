@@ -9,7 +9,7 @@
 
 class StoreInstr: public Instr {
 private:
-    Use* tarUse, * valUse;
+    Use* tarUse = nullptr, * valUse = nullptr;
 public:
     explicit StoreInstr(BasicBlock* parent, Value* tar, Value* val) {
         tarUse = new Use(tar);

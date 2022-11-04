@@ -16,8 +16,8 @@ using namespace std;
 class Parser {
 private:
     vector<tuple<SyntaxType, string>> parserList;
-    ParseCursor* cursor;
-    SyntaxTree* syntaxTree;
+    ParseCursor* cursor = nullptr;
+    SyntaxTree* syntaxTree = nullptr;
 
     void compUnit(Node* curNode) {
         while (!cursor->judgeEnd()) {
@@ -584,13 +584,12 @@ private:
             SyntaxType::IDENFR, SyntaxType::PLUS, SyntaxType::MINU, SyntaxType::NOT, SyntaxType::LPARENT, SyntaxType::INTCON
     };
 
-    void fileWrite(const char *outputFile) {
-        ofstream f(outputFile);
+    void fileWrite(fstream* f) {
         for (auto i : parserList) {
             if (std::get<1>(i) == SyntaxType2String.at(SyntaxType::NONE)) {
-                f << "<" << SyntaxType2String.at(std::get<0>(i)) << ">" << "\n";
+                *f << "<" << SyntaxType2String.at(std::get<0>(i)) << ">" << "\n";
             } else {
-                f << SyntaxType2String.at(std::get<0>(i)) << " " << std::get<1>(i) << "\n";
+                *f << SyntaxType2String.at(std::get<0>(i)) << " " << std::get<1>(i) << "\n";
             }
         }
     }
@@ -600,12 +599,11 @@ private:
     }
 
 public:
-    explicit Parser(vector<tuple<SyntaxType, string>> lexerList, const char* outputFile) {
+    explicit Parser(vector<tuple<SyntaxType, string>> lexerList) {
         cursor = new ParseCursor(move(lexerList));
         Node* root = new CompUnitNode;
         syntaxTree = new SyntaxTree(root);
         genNode(root, SyntaxType::COMPUNIT);
-//        fileWrite(outputFile);
     }
 
     Node* getSyntaxTreeRoot() {

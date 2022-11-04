@@ -13,7 +13,7 @@ class GlobalInt;
 static std::set<GlobalInt*> GLOBALINTS;
 class GlobalInt: public GlobalVal {
 private:
-    Use* allocaUse;
+    Use* allocaUse = nullptr;
 public:
     explicit GlobalInt(Value* allocaInstr) {
         allocaUse = new Use(allocaInstr);
@@ -23,8 +23,6 @@ public:
         return allocaUse;
     }
 
-    string toLlvmString() override {
-
-    }
+    string toLlvmString() override { return ""; }
 };
 #endif //TAYILER_GLOBALINT_H

@@ -23,8 +23,8 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::CONSTEXP: assert(constInitVals.empty()), constExp = node; break;
-            case SyntaxType::CONSTINITVAL: assert(constExp == nullptr), constInitVals.emplace_back(node); break;
+            case SyntaxType::CONSTEXP: YASSERT(constInitVals.empty()) constExp = node; break;
+            case SyntaxType::CONSTINITVAL: YASSERT(constExp == nullptr) constInitVals.emplace_back(node); break;
             default: break;
         }
     }

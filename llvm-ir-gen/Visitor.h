@@ -19,16 +19,16 @@
 static map<SymbolTable*, map<string, AllocaInstr*>*> SYMBOLTABLE2IDENT2ALLOCAINSTR; /* TODO need merge into SymbolTable */
 class Visitor {
 public:
-    explicit Visitor(Node* root, const char *outputFile) {
+    explicit Visitor(Node* root) {
         manager = new Manager;
         visitAst(root);
     }
 
 private:
-    Manager* manager;
-    BasicBlock* curBasicBlock{};
-    SymbolTable* curSymbolTable{};
-    Function* curFunction{};
+    Manager* manager = nullptr;
+    BasicBlock* curBasicBlock = nullptr;
+    SymbolTable* curSymbolTable = nullptr;
+    Function* curFunction = nullptr;
 
     void visitAst(Node* root) {
         visitCompUnit(dynamic_cast<CompUnitNode *>(root));
@@ -85,7 +85,7 @@ private:
     }
 
     void visitBlock(BlockNode* node) {
-        assert(curBasicBlock != nullptr);
+        YASSERT(curBasicBlock != nullptr);
         for (auto i : node->getBlockItems()) {
             visitBlockItem(dynamic_cast<BlockItemNode *>(i));
         }
@@ -208,6 +208,7 @@ private:
     void visitConstDef(ConstDefNode* node, FuncType type, bool isConstant, bool isGlobal) {
         /* TODO: without array */
         auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, isConstant, false, curFunction->genInstrIdx());
+        SYMBOLTABLE2IDENT2ALLOCAINSTR.at(curSymbolTable)->insert({allocInstr->getIdent(), allocInstr});
         new StoreInstr(curBasicBlock, allocInstr, visitConstInitVal(node->getConstInitVal()));
         if (isGlobal) {
             GLOBALINTS.insert(new GlobalInt(allocInstr));
@@ -265,7 +266,7 @@ private:
             vector<Node*> mulExps = node->getMulExps();
             vector<SyntaxType> ops = node->getOps();
             Value* mulExp = visitMulExp(dynamic_cast<MulExpNode *>(mulExps.back()));
-            assert(mulExps.size() - 1 == ops.size());
+            YASSERT(mulExps.size() - 1 == ops.size());
             for (int i = ops.size() - 1; i >= 0; i--) {
                 mulExp = new AluInstr(curBasicBlock, visitMulExp(dynamic_cast<MulExpNode *>(mulExps.at(i))), mulExp, ops.at(i), curFunction->genInstrIdx());
             }
@@ -281,7 +282,7 @@ private:
             vector<Node*> unaryExps = node->getUnaryExps();
             vector<SyntaxType> ops = node->getOps();
             Value* unaryExp = visitUnaryExp(dynamic_cast<UnaryExpNode *>(unaryExps.back()));
-            assert(unaryExps.size() - 1 == ops.size());
+            YASSERT(unaryExps.size() - 1 == ops.size());
             for (int i = ops.size() - 1; i >= 0; i--) {
                 unaryExp = new AluInstr(curBasicBlock, visitUnaryExp(dynamic_cast<UnaryExpNode *>(unaryExps.at(i))), unaryExp, ops.at(i), curFunction->genInstrIdx());
             }

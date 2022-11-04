@@ -26,7 +26,7 @@ public:
         switch (node->getType()) {
             case SyntaxType::DECL: decls.emplace_back(node); break;
             case SyntaxType::FUNCDEF: funcDefs.emplace_back(node); break;
-            case SyntaxType::MAINFUNCDEF: assert(mainFuncDef == nullptr), mainFuncDef = node;
+            case SyntaxType::MAINFUNCDEF: YASSERT(mainFuncDef == nullptr) mainFuncDef = node;
             default: break;
         }
     }

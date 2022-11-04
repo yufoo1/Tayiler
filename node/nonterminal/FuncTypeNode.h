@@ -21,8 +21,8 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::INTTK: assert(tokenType == SyntaxType::NONE), tokenType = SyntaxType::INTTK; break;
-            case SyntaxType::VOIDTK: assert(tokenType == SyntaxType::NONE), tokenType = SyntaxType::VOIDTK; break;
+            case SyntaxType::INTTK: YASSERT(tokenType == SyntaxType::NONE) tokenType = SyntaxType::INTTK; break;
+            case SyntaxType::VOIDTK: YASSERT(tokenType == SyntaxType::NONE) tokenType = SyntaxType::VOIDTK; break;
             default: break;
         }
     }

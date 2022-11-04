@@ -11,7 +11,7 @@ static int indexCnt = 0;
 
 class Use {
 private:
-    Value* value;
+    Value* value = nullptr;
     int index;
 public:
     explicit Use(Value* used) {

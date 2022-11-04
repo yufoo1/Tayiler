@@ -23,9 +23,9 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::IDENFR: assert(ident.empty()), ident = node->getVal(); break;
+            case SyntaxType::IDENFR: YASSERT(ident.empty()) ident = node->getVal(); break;
             case SyntaxType::CONSTEXP: constExps.emplace_back(node); break;
-            case SyntaxType::INITVAL: assert(initVal == nullptr), initVal = node; break;
+            case SyntaxType::INITVAL: YASSERT(initVal == nullptr) initVal = node; break;
             default: break;
         }
     }

@@ -9,7 +9,7 @@
 
 class SymbolTable {
 private:
-    SymbolTable* parent;
+    SymbolTable* parent = nullptr;
     map<string, SymbolTerm*> terms;
 public:
     explicit SymbolTable(SymbolTable* parent) {

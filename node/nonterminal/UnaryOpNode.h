@@ -22,7 +22,7 @@ public:
     void insertNode(Node *node) override {
         set<SyntaxType> set = {SyntaxType::PLUS, SyntaxType::MINU, SyntaxType::NOT};
         if (set.count(node->getType())) {
-            assert(tokenType == SyntaxType::NONE);
+            YASSERT(tokenType == SyntaxType::NONE)
             tokenType = node->getType();
         }
     }

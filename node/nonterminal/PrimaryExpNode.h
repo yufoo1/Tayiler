@@ -23,9 +23,9 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::EXP: assert(lVal == nullptr && number == nullptr), exp = node; break;
-            case SyntaxType::LVAL: assert(exp == nullptr && number == nullptr), lVal = node; break;
-            case SyntaxType::NUMBER: assert(exp == nullptr && lVal == nullptr), number = node; break;
+            case SyntaxType::EXP: YASSERT(lVal == nullptr && number == nullptr) exp = node; break;
+            case SyntaxType::LVAL: YASSERT(exp == nullptr && number == nullptr) lVal = node; break;
+            case SyntaxType::NUMBER: YASSERT(exp == nullptr && lVal == nullptr) number = node; break;
             default: break;
         }
     }

@@ -17,7 +17,7 @@ class Instr;
 class BasicBlock: public Value {
 private:
     string label;
-    Function* function;
+    Function* function = nullptr;
     vector<Instr*> instrs;
 public:
     BasicBlock() {

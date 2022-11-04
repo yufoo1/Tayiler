@@ -27,11 +27,11 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::PRIMARYEXP: assert(funcRParams == nullptr && ident.empty()), primaryExp = node; break;
-            case SyntaxType::IDENFR: assert(primaryExp == nullptr), ident = node->getVal(); break;
-            case SyntaxType::FUNCRPARAMS: assert(primaryExp == nullptr), funcRParams = node; break;
-            case SyntaxType::UNARYOP: assert(unaryOp == SyntaxType::NONE && ident.empty()), unaryOp = dynamic_cast<UnaryOpNode*>(node)->getTokenType(); break;
-            case SyntaxType::UNARYEXP: assert(unaryExp == nullptr && ident.empty()), unaryExp = node; break;
+            case SyntaxType::PRIMARYEXP: YASSERT(funcRParams == nullptr && ident.empty()) primaryExp = node; break;
+            case SyntaxType::IDENFR: YASSERT(primaryExp == nullptr) ident = node->getVal(); break;
+            case SyntaxType::FUNCRPARAMS: YASSERT(primaryExp == nullptr) funcRParams = node; break;
+            case SyntaxType::UNARYOP: YASSERT(unaryOp == SyntaxType::NONE && ident.empty()) unaryOp = dynamic_cast<UnaryOpNode*>(node)->getTokenType(); break;
+            case SyntaxType::UNARYEXP: YASSERT(unaryExp == nullptr && ident.empty()) unaryExp = node; break;
             default: break;
         }
     }

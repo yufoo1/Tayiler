@@ -3,14 +3,12 @@
 #include "llvm-ir-gen/Visitor.h"
 
 int main() {
-    const char* inputFile = "../testfile.txt",
-                * outputFile = "../output.txt",
-                * llvmFile = "../llvm.ll",
-                * mipsFile = "../mips.txt";
-    Lexer lexer(inputFile, outputFile);
-    Parser parser(lexer.getLexerList(), outputFile);
-    Visitor visitor(parser.getSyntaxTreeRoot(), llvmFile);
-    visitor.getManager()->dumpLlvm(llvmFile);
-    visitor.getManager()->dumpMips(mipsFile);
+    ifstream input("testfile.txt");
+    ofstream output("output.txt"), llvmFile("llvm.txt"), mipsFile("mips.txt");
+    Lexer lexer(&input);
+    Parser parser(lexer.getLexerList());
+    Visitor visitor(parser.getSyntaxTreeRoot());
+    visitor.getManager()->dumpLlvm(&llvmFile);
+    visitor.getManager()->dumpMips(&mipsFile);
     return 0;
 }

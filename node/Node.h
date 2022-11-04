@@ -11,6 +11,7 @@
 #include "iostream"
 #include "../lexer/SyntaxType.h"
 #include "../parser/SyntaxTree.h"
+#include "../utils/handler.h"
 
 using namespace std;
 class Node {

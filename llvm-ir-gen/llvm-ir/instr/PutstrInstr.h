@@ -10,7 +10,7 @@
 
 class PutstrInstr: public Instr {
 private:
-    Use* use;
+    Use* use = nullptr;
 public:
     explicit PutstrInstr(BasicBlock* parent, Value* val) {
         this->setFuncType(FuncType::VOID);

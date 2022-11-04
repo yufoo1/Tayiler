@@ -17,7 +17,7 @@ class NumberNode: public Node {
     }
 
     void insertNode(Node* node) override {
-        assert(child == nullptr);
+        YASSERT(child == nullptr)
         child = node;
     }
 };

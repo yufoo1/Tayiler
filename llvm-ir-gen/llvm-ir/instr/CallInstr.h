@@ -11,9 +11,9 @@
 #include "../BasicBlock.h"
 class CallInstr: public Instr {
 private:
-    Function* function;
-    vector<Use*>* uses;
-    vector<AllocaInstr*>* allocaInstrs;
+    Function* function = nullptr;
+    vector<Use*>* uses = nullptr;
+    vector<AllocaInstr*>* allocaInstrs = nullptr;
 public:
     explicit CallInstr(BasicBlock* parent, Function* function, vector<Value*>* values, vector<AllocaInstr*>* allocaInstrs) {
         setFuncType(function->getRetType());

@@ -7,16 +7,17 @@
 #include "Instr.h"
 #include "../BasicBlock.h"
 #include "../../Visitor.h"
+#include "../../../utils/handler.h"
 
 class AluInstr: public Instr {
 private:
-    set<SyntaxType> set = {SyntaxType::PLUS, SyntaxType::MINU, SyntaxType::NOT, SyntaxType::MULT, SyntaxType::DIV, SyntaxType::MOD};
+    set<SyntaxType> opSet = {SyntaxType::PLUS, SyntaxType::MINU, SyntaxType::NOT, SyntaxType::MULT, SyntaxType::DIV, SyntaxType::MOD};
     SyntaxType op = SyntaxType::NONE;
     Use* useSrc1 = nullptr;
     Use* useSrc2 = nullptr;
 public:
     explicit AluInstr(BasicBlock* parent, Value* src1, Value* src2, SyntaxType op, int idx) {
-        assert(set.count(op));
+        YASSERT(opSet.count(op));
         useSrc1 = new Use(src1);
         useSrc2 = new Use(src2);
         setFuncType(FuncType::INT32);
