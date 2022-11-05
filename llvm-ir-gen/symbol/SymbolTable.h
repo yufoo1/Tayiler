@@ -31,5 +31,9 @@ public:
     SymbolTerm* getSymbolTerm(string ident) {
         return terms.at(ident);
     }
+
+    map<string, SymbolTerm*> getSymbolTerms() {
+        return terms;
+    }
 };
 #endif //TAYILER_SYMBOLTABLE_H

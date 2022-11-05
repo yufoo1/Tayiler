@@ -10,6 +10,7 @@
 #include "../llvm-ir-gen/llvm-ir/Function.h"
 #include "../llvm-ir-gen/llvm-ir/global-val/GlobalString.h"
 #include "../utils/handler.h"
+#include "../llvm-ir-gen/llvm-ir/global-val/GlobalInt.h"
 
 class Manager {
 public:
@@ -45,11 +46,18 @@ public:
             *f << ".data" << endl;
             for (auto i : GLOBALSTRINGS) *f << "\t" + i->toMipsString() << endl;
         }
+//        if (!GLOBALINTS.empty()) {
+//            for (auto i : GLOBALSTRINGS) *f << "\t" + i->toMipsString() << endl;
+//        }
         *f << ".text" << endl;
+        for (auto i : globalBasicBlock->getInstrs()) {
+            *f << i->toMipsString();
+        }
         *f << "\tj " + mainFunction->getEntry()->getLabel() + "\n";
         for (auto i : functions) {
             *f << i.second->toMipsString();
         }
+        *f << "\tjr $ra\n";
         *f << mainFunction->toMipsString();
         *f << "\tli $v0, 10\n\tsyscall" << endl;
         f->close();
@@ -72,9 +80,15 @@ public:
         mainFunction = func;
     }
 
+    void setGlobalBasicBlock(BasicBlock* basicBlock) {
+        YASSERT(globalBasicBlock == nullptr)
+        globalBasicBlock = basicBlock;
+    }
+
 private:
     SymbolTable symbolTable = SymbolTable(nullptr);
     map<string, Function*> functions;
     Function* mainFunction = nullptr;
+    BasicBlock* globalBasicBlock = nullptr;
 };
 #endif //TAYILER_MANAGER_H

@@ -19,7 +19,7 @@ public:
         table->addSymbolTerm(new SymbolTerm(ident, type, isConstant));
         this->isParam = isParam;
         this->ident = ident;
-        parent->addInstr(this);
+        if (parent != nullptr) parent->addInstr(this);
     }
 
     string getIdent() {
