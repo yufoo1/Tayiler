@@ -11,11 +11,12 @@
 class SymbolTable {
 private:
     SymbolTable* parent = nullptr;
-    map<string, SymbolTerm*> terms;
+    map<string, SymbolTerm*>* terms;
     map<string, Instr*>* allocaInstrs = nullptr;
 public:
     explicit SymbolTable(SymbolTable* parent) {
         this->parent = parent;
+        this->terms = new map<string, SymbolTerm*>;
         this->allocaInstrs = new map<string, Instr*>;
     }
 
@@ -24,18 +25,18 @@ public:
     }
 
     void addSymbolTerm(SymbolTerm* term) {
-        terms.insert(pair<string, SymbolTerm*>(term->getIdent(), term));
+        terms->insert(pair<string, SymbolTerm*>(term->getIdent(), term));
     }
 
-    bool checkDuplicated(string ident) {
-        return terms.count(ident);
+    bool hasSymbolTerm(string ident) {
+        return terms->count(ident);
     }
 
     SymbolTerm* getSymbolTerm(string ident) {
-        return terms.at(ident);
+        return terms->at(ident);
     }
 
-    map<string, SymbolTerm*> getSymbolTerms() {
+    map<string, SymbolTerm*>* getSymbolTerms() {
         return terms;
     }
 

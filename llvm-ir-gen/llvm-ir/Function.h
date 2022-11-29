@@ -36,6 +36,7 @@ private:
     list<BasicBlock*> basicBlocks;
     BasicBlock* retBasicBlock = nullptr;
     SymbolTable* symbolTable = nullptr;
+    bool hasRet = false;
     int localInstrCnt;
 public:
     explicit Function(BasicBlock* entry, SymbolTable* symbolTable, string ident, vector<Param*>* params, Param* retParam, FuncType retType) {
@@ -88,6 +89,14 @@ public:
 
     SymbolTable* getSymbolTable() {
         return symbolTable;
+    }
+
+    void setHasRet(bool hasRet) {
+        this->hasRet = hasRet;
+    }
+
+    bool getHasRet() {
+        return hasRet;
     }
 
     string toLlvmString() override {

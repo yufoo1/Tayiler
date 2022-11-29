@@ -19,6 +19,7 @@ private:
     ParseCursor* cursor = nullptr;
     SyntaxTree* syntaxTree = nullptr;
     ofstream* errorFile = nullptr;
+    bool inLoop = false;
 
     void compUnit(Node* curNode) {
         while (!cursor->judgeEnd()) {
@@ -118,15 +119,23 @@ private:
                 genNode(curNode, SyntaxType::LPARENT);
                 genNode(curNode, SyntaxType::COND);
                 genNode(curNode, SyntaxType::RPARENT);
+                inLoop = true;
                 genNode(curNode, SyntaxType::STMT);
+                inLoop = false;
                 break;
             }
             case SyntaxType::BREAKTK: {
+                if(!inLoop) {
+                    *errorFile << "m" << endl;
+                }
                 genNode(curNode, SyntaxType::BREAKTK);
                 genNode(curNode, SyntaxType::SEMICN);
                 break;
             }
             case SyntaxType::CONTINUETK: {
+                if(!inLoop) {
+                    *errorFile << "m" << endl;
+                }
                 genNode(curNode, SyntaxType::CONTINUETK);
                 genNode(curNode, SyntaxType::SEMICN);
                 break;

@@ -41,7 +41,7 @@ private:
         auto* entry = new BasicBlock();
         curBasicBlock = entry;
         curSymbolTable = new SymbolTable(curSymbolTable);
-        for (auto i : globalSymbolTable->getSymbolTerms()) {
+        for (auto i : *globalSymbolTable->getSymbolTerms()) {
             curSymbolTable->addSymbolTerm(i.second);
         }
         for (auto i : *globalSymbolTable->getAllocaInstrs()) {
@@ -66,6 +66,16 @@ private:
         auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, retParam->getIdent(), retParam->getFuncType(), false, true, curFunction->genInstrIdx());
         curSymbolTable->getAllocaInstrs()->insert(pair<string, Instr*>(retParam->getIdent(), allocInstr));
         visitBlock(node->getBlock());
+        if(curFunction->getFuncType() == FuncType::VOID) {
+            if(curFunction->getHasRet()) {
+                *errorFile << "f" << endl;
+            }
+        } else {
+            if(!curFunction->getHasRet()) {
+                *errorFile << "g" << endl;
+            }
+        }
+        curSymbolTable = curSymbolTable->getParent();
     }
 
     void visitMainFuncDef(MainFuncDefNode* node) {
@@ -74,19 +84,17 @@ private:
         string ident = ReservedWordMapReversed.at(SyntaxType::MAINTK);
         curBasicBlock = entry;
         curSymbolTable = new SymbolTable(curSymbolTable);
-        for (auto i : globalSymbolTable->getSymbolTerms()) {
+        for (auto i : *globalSymbolTable->getSymbolTerms()) {
             curSymbolTable->addSymbolTerm(i.second);
         }
         for (auto i : *globalSymbolTable->getAllocaInstrs()) {
-            globalSymbolTable->getAllocaInstrs()->insert({i.first, i.second});
+            curSymbolTable->getAllocaInstrs()->insert({i.first, i.second});
         }
         auto* function = new Function(curBasicBlock, curSymbolTable, ident, nullptr, nullptr, retType);
         manager->setMainFunction(function);
         curFunction = function;
         visitBlock(node->getBlock());
-//        if (curBasicBlock.isTerminated()) {
-//
-//        }
+        if(!curFunction->getHasRet()) *errorFile << "g" << endl;
         curSymbolTable = curSymbolTable->getParent();
         curBasicBlock = nullptr, curFunction = nullptr;
     }
@@ -140,14 +148,26 @@ private:
     }
 
     void visitGetintStmt(StmtNode* node) {
-        new GetintInstr(curBasicBlock, visitLVal(node->getLVal()));
+        if(curSymbolTable->getSymbolTerm(node->getLVal()->getIdent())->getIsConstant()) {
+            *errorFile << "h" << endl;
+        } else {
+            new GetintInstr(curBasicBlock, visitLVal(node->getLVal()));
+        }
     }
 
     Value* visitLVal(LValNode* node) {
         if (curSymbolTable == nullptr) {
-            return globalSymbolTable->getAllocaInstrs()->at(node->getIdent());
+            if(!globalSymbolTable->getAllocaInstrs()->count(node->getIdent())) {
+                *errorFile << "c" << endl;
+            } else {
+                return globalSymbolTable->getAllocaInstrs()->at(node->getIdent());
+            }
         } else {
-            return curSymbolTable->getAllocaInstrs()->at(node->getIdent());
+            if(!curSymbolTable->getAllocaInstrs()->count(node->getIdent())) {
+                *errorFile << "c" << endl;
+            } else {
+                return curSymbolTable->getAllocaInstrs()->at(node->getIdent());
+            }
         }
     }
 
@@ -157,7 +177,13 @@ private:
 
     void visitLValAssignStmt(StmtNode* node) {
         /* TODO array */
-        new StoreInstr(curBasicBlock, visitLVal(node->getLVal()), visitExp(node->getExps().front()));
+        if(!curSymbolTable->hasSymbolTerm(node->getLVal()->getIdent())) {
+            *errorFile << "c" << endl;
+        } else if(curSymbolTable->getSymbolTerm(node->getLVal()->getIdent())->getIsConstant()) {
+            *errorFile << "h" << endl;
+        } else {
+            new StoreInstr(curBasicBlock, visitLVal(node->getLVal()), visitExp(node->getExps().front()));
+        }
     }
 
     void visitPrintfStmt(StmtNode* node) {
@@ -186,9 +212,13 @@ private:
             }
             ++i;
         }
+        if(cnt != exps.size()) {
+            *errorFile << "l" << endl;
+        }
     }
 
     void visitReturnStmt(StmtNode* node) {
+        curFunction->setHasRet(true);
         new ReturnInstr(curBasicBlock, node->getExps().empty() ? nullptr : visitExp(node->getExps().front()),
                         curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK) ? nullptr : curFunction->getSymbolTable()->getAllocaInstrs()->at(""),
                         curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK));
@@ -219,15 +249,24 @@ private:
     void visitConstDef(ConstDefNode* node, FuncType type, bool isConstant, bool isGlobal) {
         /* TODO: without array */
         if (isGlobal) {
-            globalSymbolTable->addSymbolTerm(new SymbolTerm(node->getIdent(), type, isConstant));
-            auto* allocaInstr = new AllocaInstr(globalBasicBlock, globalSymbolTable, node->getIdent(), type, isConstant, true, 0);
-            globalSymbolTable->getAllocaInstrs()->insert({allocaInstr->getIdent(), allocaInstr});
-            new StoreInstr(globalBasicBlock, allocaInstr, visitConstInitVal(node->getConstInitVal()));
-            GLOBALINTS.insert(new GlobalInt(allocaInstr));
+            if(globalSymbolTable->getAllocaInstrs()->count(node->getIdent())) {
+                *errorFile << "b" << endl;
+            } else {
+                globalSymbolTable->addSymbolTerm(new SymbolTerm(node->getIdent(), type, isConstant));
+                auto* allocaInstr = new AllocaInstr(globalBasicBlock, globalSymbolTable, node->getIdent(), type, isConstant, true, 0);
+                globalSymbolTable->getAllocaInstrs()->insert({allocaInstr->getIdent(), allocaInstr});
+                new StoreInstr(globalBasicBlock, allocaInstr, visitConstInitVal(node->getConstInitVal()));
+                GLOBALINTS.insert(new GlobalInt(allocaInstr));
+            }
         } else {
-            auto* allocaInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, isConstant, false, curFunction->genInstrIdx());
-            curSymbolTable->getAllocaInstrs()->insert({allocaInstr->getIdent(), allocaInstr});
-            new StoreInstr(curBasicBlock, allocaInstr, visitConstInitVal(node->getConstInitVal()));
+            if(globalSymbolTable->getAllocaInstrs()->count(node->getIdent()) || curSymbolTable->getAllocaInstrs()->count(node->getIdent())) {
+                *errorFile << "b" << endl;
+            } else {
+                auto* allocaInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent(), type, isConstant, false, curFunction->genInstrIdx());
+                curSymbolTable->addSymbolTerm(new SymbolTerm(node->getIdent(), type, isConstant));
+                curSymbolTable->getAllocaInstrs()->insert({node->getIdent(), allocaInstr});
+                new StoreInstr(curBasicBlock, allocaInstr, visitConstInitVal(node->getConstInitVal()));
+            }
         }
     }
 
@@ -318,19 +357,33 @@ private:
         if (node->getPrimaryExp() != nullptr) {
             return visitPrimaryExp(node->getPrimaryExp());
         } else if (!node->getIdent().empty()) {
-            vector<Value *>* values = new vector<Value*>;
-            if (node->getFuncRParams() != nullptr) {
-                for (auto i: node->getFuncRParams()->getExps()) {
-                    values->emplace_back(visitExp(dynamic_cast<ExpNode *>(i)));
+            if(!manager->hasFunction(node->getIdent())) {
+                *errorFile << "c" << endl;
+            } else {
+                if(node->getFuncRParams()->getExps().size() !=  manager->getFunction(node->getIdent())->getParams()->size()) {
+                    *errorFile << "d" << endl;
+                } else {
+                    vector<Value *>* values = new vector<Value*>;
+                    if (node->getFuncRParams() != nullptr) {
+                        vector<Node*> exps = node->getFuncRParams()->getExps();
+                        for(int i = 0; i < exps.size(); ++i) {
+                            Value* exp = visitExp(dynamic_cast<ExpNode *>(exps.at(i)));
+                            if(exp->getFuncType() != manager->getFunction(node->getIdent())->getParams()->at(i)->getFuncType()) {
+                                *errorFile << "e" << endl;
+                            } else {
+                                values->emplace_back(visitExp(dynamic_cast<ExpNode *>(exps.at(i))));
+                            }
+                        }
+                    }
+                    vector<AllocaInstr *> *allocaInstrs = new vector<AllocaInstr*>;
+                    for (auto i: *manager->getFunction(node->getIdent())->getParams()) {
+                        allocaInstrs->emplace_back(dynamic_cast<AllocaInstr *>
+                                                   (manager->getFunction(node->getIdent())->getSymbolTable()->getAllocaInstrs()->at(i->getIdent())));
+                    }
+                    new CallInstr(curBasicBlock, manager->getFunction(node->getIdent()), values, allocaInstrs);
+                    return manager->getFunction(node->getIdent())->getSymbolTable()->getAllocaInstrs()->at("");
                 }
             }
-            vector<AllocaInstr *> *allocaInstrs = new vector<AllocaInstr*>;
-            for (auto i: *manager->getFunction(node->getIdent())->getParams()) {
-                allocaInstrs->emplace_back(dynamic_cast<AllocaInstr *>
-                                           (manager->getFunction(node->getIdent())->getSymbolTable()->getAllocaInstrs()->at(i->getIdent())));
-            }
-            new CallInstr(curBasicBlock, manager->getFunction(node->getIdent()), values, allocaInstrs);
-            return manager->getFunction(node->getIdent())->getSymbolTable()->getAllocaInstrs()->at("");
         } else if (node->getUnaryOp() != SyntaxType::NONE) {
             Value* unaryExp = visitUnaryExp(node->getUnaryExp());
             unaryExp->setFuncType(FuncType::INT32);

@@ -67,6 +67,10 @@ public:
         return functions.at(ident);
     }
 
+    bool hasFunction(const string& ident) {
+        return functions.count(ident);
+    }
+
     map<string, Function*> getFunctions() {
         return functions;
     }
