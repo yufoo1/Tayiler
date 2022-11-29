@@ -4,10 +4,10 @@
 
 int main() {
     ifstream input("testfile.txt");
-    ofstream output("output.txt"), llvmFile("llvm.txt"), mipsFile("mips.txt");
+    ofstream output("output.txt"), llvmFile("llvm.txt"), mipsFile("mips.txt"), errorFile("error.txt");
     Lexer lexer(&input);
-    Parser parser(lexer.getLexerList());
-    Visitor visitor(parser.getSyntaxTreeRoot());
+    Parser parser(lexer.getLexerList(), &errorFile);
+    Visitor visitor(parser.getSyntaxTreeRoot(), &errorFile);
     visitor.getManager()->dumpLlvm(&llvmFile);
     visitor.getManager()->dumpMips(&mipsFile);
     return 0;

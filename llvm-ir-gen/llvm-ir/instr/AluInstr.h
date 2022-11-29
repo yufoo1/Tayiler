@@ -42,7 +42,6 @@ public:
     }
 
     string toMipsString() override {
-        ALLOCSTACK(this);
         string s;
         if (useSrc1->getValue()->isInstr()) {
             int rsPos = STACKPOSMAP.at(useSrc1->getValue());

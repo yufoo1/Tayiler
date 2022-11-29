@@ -18,6 +18,7 @@ private:
     vector<tuple<SyntaxType, string>> parserList;
     ParseCursor* cursor = nullptr;
     SyntaxTree* syntaxTree = nullptr;
+    ofstream* errorFile = nullptr;
 
     void compUnit(Node* curNode) {
         while (!cursor->judgeEnd()) {
@@ -487,6 +488,18 @@ private:
     }
 
     void formatString(Node* curNode) {
+        string formatString = get<1>(cursor->getNthNode(0));
+        for(int i = 0; i < formatString.length(); i++) {
+            if(!(formatString.at(i) == 32 ||
+            formatString.at(i) == 33 ||
+            formatString.at(i) >= 40 && formatString.at(i) <= 126 ||
+            i + 1 < formatString.length() &&
+            (formatString.at(i) == '%' && formatString.at(i + 1) == 'd' ||
+            formatString.at(i) == '\\' && formatString.at(i + 1) == 'n'))) {
+                *errorFile << "a" << endl;
+                break;
+            }
+        }
         curNode->insertList(&parserList, get<1>(cursor->getNthNode(0)));
     }
 
@@ -558,10 +571,25 @@ private:
             case SyntaxType::PLUS: node = new PlusNode, cursor->next(); break;
             case SyntaxType::PRINTFTK: node = new PrintfNode, cursor->next(); break;
             case SyntaxType::RBRACE: node = new RBraceNode, cursor->next(); break;
-            case SyntaxType::RBRACK: node = new RBrackNode, cursor->next(); break;
+            case SyntaxType::RBRACK: {
+                node = new RBrackNode;
+                if(get<0>(cursor->getNthNode(0)) == SyntaxType::RBRACK) cursor->next();
+                else *errorFile << "j" << endl;
+                break;
+            }
             case SyntaxType::RETURNTK: node = new ReturnNode, cursor->next(); break;
-            case SyntaxType::RPARENT: node = new RParentNode, cursor->next(); break;
-            case SyntaxType::SEMICN: node = new SemicnNode, cursor->next(); break;
+            case SyntaxType::RPARENT: {
+                node = new RParentNode;
+                if(get<0>(cursor->getNthNode(0)) == SyntaxType::RPARENT) cursor->next();
+                else *errorFile << "k" << endl;
+                break;
+            }
+            case SyntaxType::SEMICN: {
+                node = new SemicnNode;
+                if(get<0>(cursor->getNthNode(0)) == SyntaxType::SEMICN) cursor->next();
+                else *errorFile << "i" << endl;
+                break;
+            }
             case SyntaxType::VOIDTK: node = new VoidNode, cursor->next(); break;
             case SyntaxType::WHILETK: node = new WhileNode, cursor->next(); break;
 
@@ -599,10 +627,11 @@ private:
     }
 
 public:
-    explicit Parser(vector<tuple<SyntaxType, string>> lexerList) {
+    explicit Parser(vector<tuple<SyntaxType, string>> lexerList, ofstream* f) {
         cursor = new ParseCursor(move(lexerList));
         Node* root = new CompUnitNode;
         syntaxTree = new SyntaxTree(root);
+        errorFile = f;
         genNode(root, SyntaxType::COMPUNIT);
     }
 

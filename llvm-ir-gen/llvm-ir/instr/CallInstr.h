@@ -49,7 +49,7 @@ public:
             } else {
                 s += "\tori $t0, $0, " + uses->at(i)->getValue()->getVal() + "\n";
             }
-            int tarPos = STACKPOSMAP.at(allocaInstrs->at(i));
+            int tarPos = STACKPOSMAP[allocaInstrs->at(i)];
             s += "\tsw $t0, " + to_string(tarPos) + "($sp)\n";
         }
         s += "\tjal " + function->getEntry()->getLabel() + "\n";

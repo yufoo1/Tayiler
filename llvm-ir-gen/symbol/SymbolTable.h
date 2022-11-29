@@ -6,14 +6,17 @@
 #define TAYILER_SYMBOLTABLE_H
 
 #include "SymbolTerm.h"
+#include "../llvm-ir/instr/Instr.h"
 
 class SymbolTable {
 private:
     SymbolTable* parent = nullptr;
     map<string, SymbolTerm*> terms;
+    map<string, Instr*>* allocaInstrs = nullptr;
 public:
     explicit SymbolTable(SymbolTable* parent) {
         this->parent = parent;
+        this->allocaInstrs = new map<string, Instr*>;
     }
 
     SymbolTable* getParent() {
@@ -34,6 +37,10 @@ public:
 
     map<string, SymbolTerm*> getSymbolTerms() {
         return terms;
+    }
+
+    map<string, Instr*>* getAllocaInstrs() {
+        return allocaInstrs;
     }
 };
 #endif //TAYILER_SYMBOLTABLE_H
