@@ -58,6 +58,10 @@ public:
         return w;
     }
 
+    int getCurIndex() {
+        return curIndex;
+    }
+
     char scanToken() {
         curIndex++;
         return curIndex > fileString.length() ? EOF : fileString.at(curIndex - 1);

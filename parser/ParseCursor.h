@@ -14,9 +14,9 @@ using namespace std;
 class ParseCursor {
 private:
     int curIndex;
-    vector<tuple<SyntaxType, string>> lexerList;
+    vector<tuple<SyntaxType, string, int>> lexerList;
 public:
-    explicit ParseCursor(vector<tuple<SyntaxType, string>> lexerList) {
+    explicit ParseCursor(vector<tuple<SyntaxType, string, int>> lexerList) {
         curIndex = 0;
         this->lexerList = move(lexerList);
     }
@@ -25,7 +25,7 @@ public:
         curIndex ++;
     }
 
-    tuple<SyntaxType, string> getNthNode(int n) {
+    tuple<SyntaxType, string, int> getNthNode(int n) {
         return lexerList.at(curIndex + n);
     }
 

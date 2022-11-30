@@ -15,8 +15,10 @@ using namespace std;
 
 class Lexer {
 private:
-    vector<tuple<SyntaxType, string>> lexerList;
+    vector<tuple<SyntaxType, string, int>> lexerList;
     LexCursor* cursor = nullptr;
+    vector<int> lineTag;
+    int nowLine = 1;
     tuple<bool, SyntaxType, string> lex() {
         char first = cursor->scanToken();
         switch (first) {
@@ -122,20 +124,22 @@ public:
         cursor = new LexCursor(fileRead(f));
         while (!cursor->judgeEnd()) {
             cursor->skipBlank();
+            while(cursor->getCurIndex() > lineTag.at(nowLine)) nowLine++;
             auto t = lex();
             if (get<0>(t)) {
-                lexerList.emplace_back(get<1>(t), get<2>(t));
+                lexerList.emplace_back(get<1>(t), get<2>(t), nowLine);
                 cursor->skipBlank();
             }
         }
     }
 
-    static string fileRead(ifstream* f) {
+    string fileRead(ifstream* f) {
         if (!f->is_open()) {
             cout << "error happened when open!" << endl;
         }
         string line, fileString;
         while (getline(*f, line)) {
+            lineTag.emplace_back(fileString.length());
             fileString += line + "\n";
             line.clear();
         }
@@ -149,7 +153,7 @@ public:
         }
     }
 
-    vector<tuple<SyntaxType, string>> getLexerList() {
+    vector<tuple<SyntaxType, string, int>> getLexerList() {
         return lexerList;
     }
 };

@@ -17,7 +17,7 @@ private:
     Use* useSrc2 = nullptr;
 public:
     explicit AluInstr(BasicBlock* parent, Value* src1, Value* src2, SyntaxType op, int idx) {
-        YASSERT(opSet.count(op));
+        YASSERT(opSet.count(op))
         useSrc1 = new Use(src1);
         useSrc2 = new Use(src2);
         setFuncType(FuncType::INT32);

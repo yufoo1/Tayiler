@@ -19,6 +19,7 @@ protected:
     Node* child = nullptr;
 private:
     string val; /* if instr, val is the virtual register allocated, else if constantInt, val is the value of the constantInt. */
+    int line;
 public:
     explicit Node() = default;
 
@@ -28,6 +29,14 @@ public:
 
     string getVal() {
         return val;
+    }
+
+    void setLine(int line) {
+        this->line = line;
+    }
+
+    int getLine() {
+        return line;
     }
 
     virtual void insertList(vector<tuple<SyntaxType, string>>* parserList, string val) {

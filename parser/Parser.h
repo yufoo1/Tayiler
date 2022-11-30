@@ -45,6 +45,19 @@ private:
         if (get<0>(cursor->getNthNode(0)) == SyntaxType::INTTK) genNode(curNode, SyntaxType::FUNCFPARAMS);
         genNode(curNode, SyntaxType::RPARENT);
         genNode(curNode, SyntaxType::BLOCK);
+        int line = get<2>(cursor->getNthNode(-1));
+        bool hasRet = false;
+        for(auto i : dynamic_cast<FuncDefNode*>(curNode)->getBlock()->getBlockItems()) {
+            if(i->getChild()->getType() == SyntaxType::STMT && dynamic_cast<StmtNode*>(i->getChild())->getStmtType() == StmtType::RETURN) {
+                hasRet = true;
+                line = get<2>(cursor->getNthNode(0));
+            }
+        }
+        if(dynamic_cast<FuncDefNode*>(curNode)->getFuncType()->getType() != SyntaxType::VOIDTK && !hasRet) {
+            *errorFile << to_string(line) + " g" << endl;
+        } else if(dynamic_cast<FuncDefNode*>(curNode)->getFuncType()->getType() == SyntaxType::VOIDTK && hasRet) {
+            *errorFile << to_string(line) + " f" << endl;
+        }
     }
 
 
@@ -77,8 +90,6 @@ private:
             }
         }
     }
-
-
 
     void block(Node* curNode) {
         genNode(curNode, SyntaxType::LBRACE);
@@ -126,7 +137,7 @@ private:
             }
             case SyntaxType::BREAKTK: {
                 if(!inLoop) {
-                    *errorFile << "m" << endl;
+                    *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " m" << endl;
                 }
                 genNode(curNode, SyntaxType::BREAKTK);
                 genNode(curNode, SyntaxType::SEMICN);
@@ -134,7 +145,7 @@ private:
             }
             case SyntaxType::CONTINUETK: {
                 if(!inLoop) {
-                    *errorFile << "m" << endl;
+                    *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " m" << endl;
                 }
                 genNode(curNode, SyntaxType::CONTINUETK);
                 genNode(curNode, SyntaxType::SEMICN);
@@ -149,8 +160,10 @@ private:
                 break;
             }
             case SyntaxType::PRINTFTK: {
+                int line = get<2>(cursor->getNthNode(0));
                 genNode(curNode, SyntaxType::PRINTFTK);
                 genNode(curNode, SyntaxType::LPARENT);
+                string strcon = get<1>(cursor->getNthNode(0));
                 genNode(curNode, SyntaxType::STRCON);
                 while (get<0>(cursor->getNthNode(0)) == SyntaxType::COMMA) {
                     genNode(curNode, SyntaxType::COMMA);
@@ -158,6 +171,15 @@ private:
                 }
                 genNode(curNode, SyntaxType::RPARENT);
                 genNode(curNode, SyntaxType::SEMICN);
+                int cnt = 0;
+                for(int i = 0; i < strcon.length(); ++i) {
+                    if(strcon.at(i) == '%' && i + 1 < strcon.length() && strcon.at(i + 1) == 'd') {
+                        ++cnt, ++i;
+                    }
+                }
+                if(cnt != dynamic_cast<StmtNode*>(curNode)->getExps().size()) {
+                    *errorFile << to_string(line) + " l" << endl;
+                }
                 break;
             }
             default: {
@@ -219,6 +241,16 @@ private:
         genNode(curNode, SyntaxType::LPARENT);
         genNode(curNode, SyntaxType::RPARENT);
         genNode(curNode, SyntaxType::BLOCK);
+        int line = get<2>(cursor->getNthNode(-1));
+        bool flag = false;
+        for(auto i : dynamic_cast<MainFuncDefNode*>(curNode)->getBlock()->getBlockItems()) {
+            if(i->getChild()->getType() == SyntaxType::STMT && dynamic_cast<StmtNode*>(i->getChild())->getStmtType() == StmtType::RETURN) {
+                flag = true;
+            }
+        }
+        if(!flag) {
+            *errorFile << to_string(line) + " g" << endl;
+        }
     }
 
     void constDecl(Node* curNode) {
@@ -505,7 +537,7 @@ private:
             i + 1 < formatString.length() &&
             (formatString.at(i) == '%' && formatString.at(i + 1) == 'd' ||
             formatString.at(i) == '\\' && formatString.at(i + 1) == 'n'))) {
-                *errorFile << "a" << endl;
+                *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " a" << endl;
                 break;
             }
         }
@@ -583,26 +615,26 @@ private:
             case SyntaxType::RBRACK: {
                 node = new RBrackNode;
                 if(get<0>(cursor->getNthNode(0)) == SyntaxType::RBRACK) cursor->next();
-                else *errorFile << "j" << endl;
+                else *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " j" << endl;
                 break;
             }
             case SyntaxType::RETURNTK: node = new ReturnNode, cursor->next(); break;
             case SyntaxType::RPARENT: {
                 node = new RParentNode;
                 if(get<0>(cursor->getNthNode(0)) == SyntaxType::RPARENT) cursor->next();
-                else *errorFile << "k" << endl;
+                else *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " k" << endl;
                 break;
             }
             case SyntaxType::SEMICN: {
                 node = new SemicnNode;
                 if(get<0>(cursor->getNthNode(0)) == SyntaxType::SEMICN) cursor->next();
-                else *errorFile << "i" << endl;
+                else *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " i" << endl;
                 break;
             }
             case SyntaxType::VOIDTK: node = new VoidNode, cursor->next(); break;
             case SyntaxType::WHILETK: node = new WhileNode, cursor->next(); break;
 
-            case SyntaxType::IDENFR: node = new IdentNode(get<1>(cursor->getNthNode(0))), ident(node), curNode->insertNode(node), cursor->next(); return;
+            case SyntaxType::IDENFR: node = new IdentNode(get<1>(cursor->getNthNode(0))), node->setLine(get<2>(cursor->getNthNode(0))), ident(node), curNode->insertNode(node), cursor->next(); return;
             case SyntaxType::STRCON: node = new StrConNode(get<1>(cursor->getNthNode(0))), formatString(node), curNode->insertNode(node), cursor->next(); return;
             case SyntaxType::INTCON: node = new IntConNode(get<1>(cursor->getNthNode(0))), intConst(node), curNode->insertNode(node), cursor->next(); return;
             default: error(); return;
@@ -636,7 +668,7 @@ private:
     }
 
 public:
-    explicit Parser(vector<tuple<SyntaxType, string>> lexerList, ofstream* f) {
+    explicit Parser(vector<tuple<SyntaxType, string, int>> lexerList, ofstream* f) {
         cursor = new ParseCursor(move(lexerList));
         Node* root = new CompUnitNode;
         syntaxTree = new SyntaxTree(root);

@@ -8,10 +8,12 @@
 #include "../Node.h"
 #include "FuncTypeNode.h"
 #include "FuncFParamsNode.h"
+#include "../terminal/IdentNode.h"
+
 class FuncDefNode: public Node{
 private:
     Node* funcType = nullptr;
-    string ident;
+    Node* ident = nullptr;
     Node* funcFParams = nullptr;
     Node* block = nullptr;
 public:
@@ -26,7 +28,7 @@ public:
     void insertNode(Node* node) override {
         switch (node->getType()) {
             case SyntaxType::FUNCTYPE: YASSERT(funcType == nullptr) funcType = node; break;
-            case SyntaxType::IDENFR: YASSERT(ident.empty()) ident = node->getVal(); break;
+            case SyntaxType::IDENFR: YASSERT(ident == nullptr) ident = node; break;
             case SyntaxType::FUNCFPARAMS: YASSERT(funcFParams == nullptr) funcFParams = node; break;
             case SyntaxType::BLOCK: YASSERT(block == nullptr) block = node; break;
             default: break;
@@ -37,8 +39,8 @@ public:
         return dynamic_cast<FuncTypeNode *>(funcType);
     }
 
-    string getIdent() {
-        return ident;
+    IdentNode* getIdent() {
+        return dynamic_cast<IdentNode *>(ident);
     }
 
     FuncFParamsNode* getFunFParams() {

@@ -10,7 +10,7 @@
 class FuncFParamNode: public Node {
 private:
     Node* bType = nullptr;
-    string ident;
+    Node* ident = nullptr;
     bool isArray = false;
     vector<Node*> constExps;
 public:
@@ -25,7 +25,7 @@ public:
     void insertNode(Node *node) override {
         switch (node->getType()) {
             case SyntaxType::BTYPE: YASSERT(bType == nullptr) bType = node; break;
-            case SyntaxType::IDENFR: YASSERT(ident.empty()) ident = node->getVal(); break;
+            case SyntaxType::IDENFR: YASSERT(ident == nullptr) ident = node; break;
             case SyntaxType::LBRACK: isArray = true; break;
             case SyntaxType::CONSTEXP: YASSERT(isArray) constExps.emplace_back(node); break;
             default: break;
@@ -36,8 +36,8 @@ public:
         return dynamic_cast<BTypeNode *>(bType);
     }
 
-    string getIdent() {
-        return ident;
+    IdentNode* getIdent() {
+        return dynamic_cast<IdentNode *>(ident);
     }
 
     bool getIsArray() {

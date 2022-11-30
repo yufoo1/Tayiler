@@ -11,7 +11,7 @@
 class UnaryExpNode: public Node {
 private:
     Node* primaryExp = nullptr;
-    string ident;
+    Node* ident = nullptr;
     Node* funcRParams = nullptr;
     SyntaxType unaryOp = SyntaxType::NONE;
     Node* unaryExp = nullptr;
@@ -27,11 +27,11 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::PRIMARYEXP: YASSERT(funcRParams == nullptr && ident.empty()) primaryExp = node; break;
-            case SyntaxType::IDENFR: YASSERT(primaryExp == nullptr) ident = node->getVal(); break;
+            case SyntaxType::PRIMARYEXP: YASSERT(funcRParams == nullptr && ident == nullptr) primaryExp = node; break;
+            case SyntaxType::IDENFR: YASSERT(primaryExp == nullptr) ident = node; break;
             case SyntaxType::FUNCRPARAMS: YASSERT(primaryExp == nullptr) funcRParams = node; break;
-            case SyntaxType::UNARYOP: YASSERT(unaryOp == SyntaxType::NONE && ident.empty()) unaryOp = dynamic_cast<UnaryOpNode*>(node)->getTokenType(); break;
-            case SyntaxType::UNARYEXP: YASSERT(unaryExp == nullptr && ident.empty()) unaryExp = node; break;
+            case SyntaxType::UNARYOP: YASSERT(unaryOp == SyntaxType::NONE && ident == nullptr) unaryOp = dynamic_cast<UnaryOpNode*>(node)->getTokenType(); break;
+            case SyntaxType::UNARYEXP: YASSERT(unaryExp == nullptr && ident == nullptr) unaryExp = node; break;
             default: break;
         }
     }
@@ -40,8 +40,8 @@ public:
         return dynamic_cast<PrimaryExpNode *>(primaryExp);
     }
 
-    string getIdent() {
-        return ident;
+    IdentNode* getIdent() {
+        return dynamic_cast<IdentNode *>(ident);
     }
 
     FuncRParamsNode* getFuncRParams() {

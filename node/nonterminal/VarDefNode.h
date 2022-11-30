@@ -9,7 +9,7 @@
 
 class VarDefNode: public Node {
 private:
-    string ident;
+    Node* ident = nullptr;
     vector<Node*> constExps;
     Node* initVal = nullptr;
 public:
@@ -23,15 +23,15 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::IDENFR: YASSERT(ident.empty()) ident = node->getVal(); break;
+            case SyntaxType::IDENFR: YASSERT(ident == nullptr) ident = node; break;
             case SyntaxType::CONSTEXP: constExps.emplace_back(node); break;
             case SyntaxType::INITVAL: YASSERT(initVal == nullptr) initVal = node; break;
             default: break;
         }
     }
 
-    string getIdent() {
-        return ident;
+    IdentNode* getIdent() {
+        return dynamic_cast<IdentNode *>(ident);
     }
 
     vector<Node*> getConstExps() {

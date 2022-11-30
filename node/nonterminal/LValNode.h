@@ -9,7 +9,7 @@
 
 class LValNode: public Node {
 private:
-    string ident;
+    Node* ident = nullptr;
     vector<Node*> exps;
 public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
@@ -22,14 +22,14 @@ public:
 
     void insertNode(Node *node) override {
         switch (node->getType()) {
-            case SyntaxType::IDENFR: YASSERT(ident.empty()) ident = node->getVal(); break;
+            case SyntaxType::IDENFR: YASSERT(ident == nullptr) ident = node; break;
             case SyntaxType::EXP: exps.emplace_back(node);
             default: break;
         }
     }
 
-    string getIdent() {
-        return ident;
+    IdentNode* getIdent() {
+        return dynamic_cast<IdentNode *>(ident);
     }
 
     vector<Node*> getExps() {
