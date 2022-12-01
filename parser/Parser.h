@@ -206,14 +206,15 @@ private:
     bool judgeLVal() {
         int cur = 1, lBrackCnt = 0;
         if (get<0>(cursor->getNthNode(cur)) == SyntaxType::LBRACK) {
-            lBrackCnt++, cur++;
-            while (lBrackCnt != 0 || get<0>(cursor->getNthNode(cur)) == SyntaxType::LBRACK) {
+            ++lBrackCnt, ++cur;
+            while (get<0>(cursor->getNthNode(cur)) != SyntaxType::ASSIGN &&
+            (lBrackCnt > 0 || get<0>(cursor->getNthNode(cur)) == SyntaxType::LBRACK)) {
                 if (get<0>(cursor->getNthNode(cur)) == SyntaxType::LBRACK) {
-                    lBrackCnt ++;
+                    ++lBrackCnt;
                 } else if (get<0>(cursor->getNthNode(cur)) == SyntaxType::RBRACK) {
-                    lBrackCnt --;
+                    --lBrackCnt;
                 }
-                cur++;
+                ++cur;
             }
         }
         return get<0>(cursor->getNthNode(cur)) == SyntaxType::ASSIGN;

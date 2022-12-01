@@ -9,7 +9,7 @@ int main() {
     Parser parser(lexer.getLexerList());
     Visitor visitor(parser.getSyntaxTreeRoot(), parser.getErrorList());
     visitor.getManager()->dumpError(&errorFile);
-    visitor.getManager()->dumpLlvm(&llvmFile);
-    visitor.getManager()->dumpMips(&mipsFile);
+//    visitor.getManager()->dumpLlvm(&llvmFile);
+//    visitor.getManager()->dumpMips(&mipsFile);
     return 0;
 }

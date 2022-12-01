@@ -14,16 +14,16 @@ private:
     string ident;
     FuncType type;
     bool isConstant = false;
-    Instr* instr;
+    Instr* allocaInstr = nullptr;
     int dimensionality;
 
 public:
-    SymbolTerm(string ident, FuncType type, bool isConstant, int dimensionality/* , AllocaInstr* instr */) {
+    SymbolTerm(string ident, FuncType type, bool isConstant, int dimensionality, Instr* allocaInstr) {
         this->ident = std::move(ident);
         this->type = type;
         this->isConstant = isConstant;
         this->dimensionality = dimensionality;
-//        this->instr = instr;
+        this->allocaInstr = allocaInstr;
     }
 
     string getIdent() {
@@ -43,7 +43,7 @@ public:
     }
 
     Instr* getAllocaInstr() {
-        return instr;
+        return allocaInstr;
     }
 
 };

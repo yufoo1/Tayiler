@@ -32,5 +32,9 @@ public:
     bool judgeEnd() {
         return curIndex >= lexerList.size();
     }
+
+    bool judgeEnd(int n) {
+        return curIndex + n >= lexerList.size();
+    }
 };
 #endif //TAYILER_PARSECURSOR_H

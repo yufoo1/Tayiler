@@ -12,12 +12,12 @@ class SymbolTable {
 private:
     SymbolTable* parent = nullptr;
     map<string, SymbolTerm*>* terms = nullptr;
-    map<string, Instr*>* allocaInstrs = nullptr;
+//    map<string, Instr*>* allocaInstrs = nullptr;
 public:
     explicit SymbolTable(SymbolTable* parent) {
         this->parent = parent;
         this->terms = new map<string, SymbolTerm*>;
-        this->allocaInstrs = new map<string, Instr*>;
+//        this->allocaInstrs = new map<string, Instr*>;
     }
 
     SymbolTable* getParent() {
@@ -40,8 +40,8 @@ public:
         return terms;
     }
 
-    map<string, Instr*>* getAllocaInstrs() {
-        return allocaInstrs;
-    }
+//    map<string, Instr*>* getAllocaInstrs() {
+//        return allocaInstrs;
+//    }
 };
 #endif //TAYILER_SYMBOLTABLE_H
