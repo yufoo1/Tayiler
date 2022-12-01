@@ -14,7 +14,9 @@
 
 class Manager {
 public:
-    explicit Manager() = default;
+    explicit Manager(vector<tuple<int, string>>* errorList) {
+        this->errorList = errorList;
+    }
 
     SymbolTable getSymbolTable() {
         return symbolTable;
@@ -63,6 +65,17 @@ public:
         f->close();
     }
 
+    static bool compare(const tuple<int, string>& a, const tuple<int, string>& b) {
+        return std::tie(get<0>(a), get<1>(a)) < std::tie(get<0>(b), get<1>(b));
+    }
+
+    void dumpError(ofstream* f) {
+        std::sort(errorList->begin(), errorList->end(), compare);
+        for(auto i : *errorList) {
+            *f << to_string(get<0>(i)) + " " + get<1>(i) << endl;
+        }
+    }
+
     Function* getFunction(const string& ident) {
         return functions.at(ident);
     }
@@ -94,5 +107,6 @@ private:
     map<string, Function*> functions;
     Function* mainFunction = nullptr;
     BasicBlock* globalBasicBlock = nullptr;
+    vector<tuple<int, string>>* errorList = nullptr;
 };
 #endif //TAYILER_MANAGER_H

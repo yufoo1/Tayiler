@@ -33,7 +33,7 @@ public:
             case SyntaxType::MULT: return "mul";
             case SyntaxType::DIV: return "sdiv";
             case SyntaxType::MOD: return "mod";
-            default: break;
+            default: return "ERROR";
         }
     }
 

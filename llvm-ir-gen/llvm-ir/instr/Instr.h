@@ -16,11 +16,11 @@ class Instr: public Value {
 public:
     Instr() { }
 
-    virtual string toLlvmString() override { }
+    virtual string toLlvmString() override { return 0; }
 
-    virtual string toMipsString() override { }
+    virtual string toMipsString() override { return 0; }
 
-    virtual bool hasValue() { }
+    virtual bool hasValue() { return 0; }
 
 protected:
 

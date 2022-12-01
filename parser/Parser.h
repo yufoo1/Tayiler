@@ -16,10 +16,12 @@ using namespace std;
 class Parser {
 private:
     vector<tuple<SyntaxType, string>> parserList;
+    vector<tuple<int, string>> errorList;
     ParseCursor* cursor = nullptr;
     SyntaxTree* syntaxTree = nullptr;
-    ofstream* errorFile = nullptr;
-    bool inLoop = false;
+    int loopDepth = 0;
+    int retLine = -1;
+    bool hasRet = false;
 
     void compUnit(Node* curNode) {
         while (!cursor->judgeEnd()) {
@@ -39,27 +41,19 @@ private:
     }
 
     void funcDef(Node* curNode) {
+        hasRet = false;
         genNode(curNode, SyntaxType::FUNCTYPE);
         genNode(curNode, SyntaxType::IDENFR);
         genNode(curNode, SyntaxType::LPARENT);
         if (get<0>(cursor->getNthNode(0)) == SyntaxType::INTTK) genNode(curNode, SyntaxType::FUNCFPARAMS);
         genNode(curNode, SyntaxType::RPARENT);
         genNode(curNode, SyntaxType::BLOCK);
-        int line = get<2>(cursor->getNthNode(-1));
-        bool hasRet = false;
-        for(auto i : dynamic_cast<FuncDefNode*>(curNode)->getBlock()->getBlockItems()) {
-            if(i->getChild()->getType() == SyntaxType::STMT && dynamic_cast<StmtNode*>(i->getChild())->getStmtType() == StmtType::RETURN) {
-                hasRet = true;
-                line = get<2>(cursor->getNthNode(0));
-            }
-        }
-        if(dynamic_cast<FuncDefNode*>(curNode)->getFuncType()->getType() != SyntaxType::VOIDTK && !hasRet) {
-            *errorFile << to_string(line) + " g" << endl;
-        } else if(dynamic_cast<FuncDefNode*>(curNode)->getFuncType()->getType() == SyntaxType::VOIDTK && hasRet) {
-            *errorFile << to_string(line) + " f" << endl;
+        if(dynamic_cast<FuncDefNode*>(curNode)->getFuncType()->getTokenType() != SyntaxType::VOIDTK && !hasRet) {
+            errorList.emplace_back(get<2>(cursor->getNthNode(-1)), "g");
+        } else if(dynamic_cast<FuncDefNode*>(curNode)->getFuncType()->getTokenType() == SyntaxType::VOIDTK && hasRet) {
+            errorList.emplace_back(retLine, "f");
         }
     }
-
 
     void funcType(Node* curNode) {
         switch (get<0>(cursor->getNthNode(0))) {
@@ -130,30 +124,32 @@ private:
                 genNode(curNode, SyntaxType::LPARENT);
                 genNode(curNode, SyntaxType::COND);
                 genNode(curNode, SyntaxType::RPARENT);
-                inLoop = true;
+                ++loopDepth;
                 genNode(curNode, SyntaxType::STMT);
-                inLoop = false;
+                --loopDepth;
                 break;
             }
             case SyntaxType::BREAKTK: {
-                if(!inLoop) {
-                    *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " m" << endl;
+                if(loopDepth == 0) {
+                    errorList.emplace_back(get<2>(cursor->getNthNode(0)), "m");
                 }
                 genNode(curNode, SyntaxType::BREAKTK);
                 genNode(curNode, SyntaxType::SEMICN);
                 break;
             }
             case SyntaxType::CONTINUETK: {
-                if(!inLoop) {
-                    *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " m" << endl;
+                if(loopDepth == 0) {
+                    errorList.emplace_back(get<2>(cursor->getNthNode(0)), "m");
                 }
                 genNode(curNode, SyntaxType::CONTINUETK);
                 genNode(curNode, SyntaxType::SEMICN);
                 break;
             }
             case SyntaxType::RETURNTK: {
+                retLine = get<2>(cursor->getNthNode(0));
                 genNode(curNode, SyntaxType::RETURNTK);
                 if (ExpFirst.count(get<0>(cursor->getNthNode(0)))) {
+                    hasRet = true;
                     genNode(curNode, SyntaxType::EXP);
                 }
                 genNode(curNode, SyntaxType::SEMICN);
@@ -178,7 +174,7 @@ private:
                     }
                 }
                 if(cnt != dynamic_cast<StmtNode*>(curNode)->getExps().size()) {
-                    *errorFile << to_string(line) + " l" << endl;
+                    errorList.emplace_back(line, "l");
                 }
                 break;
             }
@@ -249,7 +245,7 @@ private:
             }
         }
         if(!flag) {
-            *errorFile << to_string(line) + " g" << endl;
+            errorList.emplace_back(line, "g");
         }
     }
 
@@ -530,14 +526,15 @@ private:
 
     void formatString(Node* curNode) {
         string formatString = get<1>(cursor->getNthNode(0));
-        for(int i = 0; i < formatString.length(); i++) {
+        for(int i = 1; i < formatString.length() - 1; ++i) {
             if(!(formatString.at(i) == 32 ||
             formatString.at(i) == 33 ||
-            formatString.at(i) >= 40 && formatString.at(i) <= 126 ||
-            i + 1 < formatString.length() &&
+            formatString.at(i) >= 40 && formatString.at(i) <= 91 ||
+            formatString.at(i) >= 93 && formatString.at(i) <= 126 ||
+            i + 1 < formatString.length() - 1 &&
             (formatString.at(i) == '%' && formatString.at(i + 1) == 'd' ||
             formatString.at(i) == '\\' && formatString.at(i + 1) == 'n'))) {
-                *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " a" << endl;
+                errorList.emplace_back(get<2>(cursor->getNthNode(0)), "a");
                 break;
             }
         }
@@ -615,20 +612,20 @@ private:
             case SyntaxType::RBRACK: {
                 node = new RBrackNode;
                 if(get<0>(cursor->getNthNode(0)) == SyntaxType::RBRACK) cursor->next();
-                else *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " j" << endl;
+                else errorList.emplace_back(get<2>(cursor->getNthNode(-1)), "k");
                 break;
             }
             case SyntaxType::RETURNTK: node = new ReturnNode, cursor->next(); break;
             case SyntaxType::RPARENT: {
                 node = new RParentNode;
                 if(get<0>(cursor->getNthNode(0)) == SyntaxType::RPARENT) cursor->next();
-                else *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " k" << endl;
+                else errorList.emplace_back(get<2>(cursor->getNthNode(-1)), "j");
                 break;
             }
             case SyntaxType::SEMICN: {
                 node = new SemicnNode;
                 if(get<0>(cursor->getNthNode(0)) == SyntaxType::SEMICN) cursor->next();
-                else *errorFile << to_string(get<2>(cursor->getNthNode(0))) + " i" << endl;
+                else errorList.emplace_back(get<2>(cursor->getNthNode(-1)), "i");
                 break;
             }
             case SyntaxType::VOIDTK: node = new VoidNode, cursor->next(); break;
@@ -656,9 +653,9 @@ private:
     void fileWrite(fstream* f) {
         for (auto i : parserList) {
             if (std::get<1>(i) == SyntaxType2String.at(SyntaxType::NONE)) {
-                *f << "<" << SyntaxType2String.at(std::get<0>(i)) << ">" << "\n";
+                *f << "<" << SyntaxType2String.at(std::get<0>(i)) << ">" << endl;
             } else {
-                *f << SyntaxType2String.at(std::get<0>(i)) << " " << std::get<1>(i) << "\n";
+                *f << SyntaxType2String.at(std::get<0>(i)) << " " << std::get<1>(i) << endl;
             }
         }
     }
@@ -668,16 +665,19 @@ private:
     }
 
 public:
-    explicit Parser(vector<tuple<SyntaxType, string, int>> lexerList, ofstream* f) {
+    explicit Parser(vector<tuple<SyntaxType, string, int>> lexerList) {
         cursor = new ParseCursor(move(lexerList));
         Node* root = new CompUnitNode;
         syntaxTree = new SyntaxTree(root);
-        errorFile = f;
         genNode(root, SyntaxType::COMPUNIT);
     }
 
     Node* getSyntaxTreeRoot() {
         return syntaxTree->getRoot();
+    }
+
+    vector<tuple<int, string>> getErrorList() {
+        return errorList;
     }
 };
 #endif //TAYILER_PARSER_H

@@ -16,14 +16,33 @@ using namespace std;
 class Param: public Value {
 private:
     string ident;
+    int identLine;
+    int dimensionality;
 public:
-    explicit Param(string ident, FuncType type) {
+    explicit Param(string ident, FuncType type, int identLine) {
         this->ident = ident;
+        this->identLine = identLine;
+        this->dimensionality = 0;
+        setFuncType(type);
+    }
+
+    explicit Param(string ident, FuncType type, int dimensionality, int identLine) {
+        this->ident = ident;
+        this->identLine = identLine;
+        this->dimensionality = dimensionality;
         setFuncType(type);
     }
 
     string getIdent() {
         return ident;
+    }
+
+    int getIdentLine() {
+        return identLine;
+    }
+
+    int getDimensionality() {
+        return dimensionality;
     }
 };
 class Function: public Value {

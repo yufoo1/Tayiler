@@ -16,7 +16,7 @@ public:
     explicit AllocaInstr(BasicBlock* parent, SymbolTable* table, string ident, FuncType type, bool isConstant, bool isParam, int idx) {
         genInstrVirtualReg(idx);
         setFuncType(type);
-        table->addSymbolTerm(new SymbolTerm(ident, type, isConstant));
+        // table->addSymbolTerm(new SymbolTerm(ident, type, isConstant));
         this->isParam = isParam;
         this->ident = ident;
         if (parent != nullptr) parent->addInstr(this);

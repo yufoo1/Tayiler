@@ -11,7 +11,7 @@
 class SymbolTable {
 private:
     SymbolTable* parent = nullptr;
-    map<string, SymbolTerm*>* terms;
+    map<string, SymbolTerm*>* terms = nullptr;
     map<string, Instr*>* allocaInstrs = nullptr;
 public:
     explicit SymbolTable(SymbolTable* parent) {

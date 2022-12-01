@@ -7,18 +7,22 @@
 
 //#include "../llvm-ir/instr/AllocaInstr.h"
 
+#include "../llvm-ir/instr/Instr.h"
+
 class SymbolTerm {
 private:
     string ident;
     FuncType type;
     bool isConstant = false;
-//    AllocaInstr* instr;
+    Instr* instr;
+    int dimensionality;
 
 public:
-    SymbolTerm(string ident, FuncType type, bool isConstant/* , AllocaInstr* instr */) {
-        this->ident = ident;
+    SymbolTerm(string ident, FuncType type, bool isConstant, int dimensionality/* , AllocaInstr* instr */) {
+        this->ident = std::move(ident);
         this->type = type;
         this->isConstant = isConstant;
+        this->dimensionality = dimensionality;
 //        this->instr = instr;
     }
 
@@ -34,9 +38,13 @@ public:
         return isConstant;
     }
 
-//    AllocaInstr* getAllocaInstr() {
-//        return instr;
-//    }
+    int getDimensionality() {
+        return dimensionality;
+    }
+
+    Instr* getAllocaInstr() {
+        return instr;
+    }
 
 };
 #endif //TAYILER_SYMBOLTERM_H

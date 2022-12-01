@@ -11,7 +11,7 @@ class FuncFParamNode: public Node {
 private:
     Node* bType = nullptr;
     Node* ident = nullptr;
-    bool isArray = false;
+    int dimensionality = 0;
     vector<Node*> constExps;
 public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
@@ -26,8 +26,8 @@ public:
         switch (node->getType()) {
             case SyntaxType::BTYPE: YASSERT(bType == nullptr) bType = node; break;
             case SyntaxType::IDENFR: YASSERT(ident == nullptr) ident = node; break;
-            case SyntaxType::LBRACK: isArray = true; break;
-            case SyntaxType::CONSTEXP: YASSERT(isArray) constExps.emplace_back(node); break;
+            case SyntaxType::LBRACK: ++dimensionality; break;
+            case SyntaxType::CONSTEXP: YASSERT(dimensionality != 0) constExps.emplace_back(node); break;
             default: break;
         }
     }
@@ -40,8 +40,8 @@ public:
         return dynamic_cast<IdentNode *>(ident);
     }
 
-    bool getIsArray() {
-        return isArray;
+    bool getDimensionality() {
+        return dimensionality;
     }
 
     vector<Node*> getConstExps() {

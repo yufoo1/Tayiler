@@ -18,7 +18,7 @@ private:
     vector<tuple<SyntaxType, string, int>> lexerList;
     LexCursor* cursor = nullptr;
     vector<int> lineTag;
-    int nowLine = 1;
+    int nowLine = 0;
     tuple<bool, SyntaxType, string> lex() {
         char first = cursor->scanToken();
         switch (first) {
@@ -124,10 +124,10 @@ public:
         cursor = new LexCursor(fileRead(f));
         while (!cursor->judgeEnd()) {
             cursor->skipBlank();
-            while(cursor->getCurIndex() > lineTag.at(nowLine)) nowLine++;
+            while(cursor->getCurIndex() >= lineTag.at(nowLine)) ++nowLine;
             auto t = lex();
             if (get<0>(t)) {
-                lexerList.emplace_back(get<1>(t), get<2>(t), nowLine);
+                lexerList.emplace_back(get<1>(t), get<2>(t), nowLine + 1);
                 cursor->skipBlank();
             }
         }
@@ -139,8 +139,8 @@ public:
         }
         string line, fileString;
         while (getline(*f, line)) {
-            lineTag.emplace_back(fileString.length());
             fileString += line + "\n";
+            lineTag.emplace_back(fileString.length());
             line.clear();
         }
         f->close();
@@ -149,7 +149,7 @@ public:
 
     void fileWrite(ofstream* f) {
         for (auto i : lexerList) {
-            *f << SyntaxType2String.at(std::get<0>(i)) << " " << std::get<1>(i) << "\n";
+            *f << SyntaxType2String.at(std::get<0>(i)) << " " << std::get<1>(i) << endl;
         }
     }
 
