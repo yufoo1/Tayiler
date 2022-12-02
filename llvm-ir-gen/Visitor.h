@@ -32,6 +32,28 @@ private:
         visitCompUnit(dynamic_cast<CompUnitNode *>(root));
     }
 
+    bool checkSymbolTable(string ident) {
+        SymbolTable* cur = curSymbolTable;
+        while(cur != nullptr) {
+            if(cur->getSymbolTerms()->count(ident)) {
+                return true;
+            }
+            cur = cur->getParent();
+        }
+        return false;
+    }
+
+    SymbolTerm* getSymbolTermIteratively(string ident) {
+        SymbolTable* cur = curSymbolTable;
+        while(cur != nullptr) {
+            if(cur->getSymbolTerms()->count(ident)) {
+                return cur->getSymbolTerm(ident);
+            }
+            cur = cur->getParent();
+        }
+        return nullptr;
+    }
+
     void visitCompUnit(CompUnitNode* node) {
         for (auto i : (node->getDeclVec())) visitDecl(dynamic_cast<DeclNode *>(i), true);
         for (auto i : (node->getFuncDefVec())) visitFuncDef(dynamic_cast<FuncDefNode *>(i));
@@ -39,15 +61,12 @@ private:
     }
 
     void visitFuncDef(FuncDefNode* node) {
-        if(globalSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal()) || manager->getFunctions().count(node->getIdent()->getVal())) {
+        if(manager->getFunctions().count(node->getIdent()->getVal()) || checkSymbolTable(node->getIdent()->getVal())) {
             errorList.emplace_back(node->getIdent()->getLine(), "b");
         }
         auto* entry = new BasicBlock();
         curBasicBlock = entry;
-        curSymbolTable = new SymbolTable(curSymbolTable);
-        for (auto i : *globalSymbolTable->getSymbolTerms()) {
-            curSymbolTable->addSymbolTerm(i.second);
-        }
+        curSymbolTable = new SymbolTable(globalSymbolTable);
         auto *params = new vector<Param*>;
         if (node->getFunFParams() != nullptr) {
             for (auto i : node->getFunFParams()->getFuncFParams()) {
@@ -79,10 +98,7 @@ private:
         auto* entry = new BasicBlock();
         string ident = ReservedWordMapReversed.at(SyntaxType::MAINTK);
         curBasicBlock = entry;
-        curSymbolTable = new SymbolTable(curSymbolTable);
-        for (auto i : *globalSymbolTable->getSymbolTerms()) {
-            curSymbolTable->addSymbolTerm(i.second);
-        }
+        curSymbolTable = new SymbolTable(globalSymbolTable);
         auto* function = new Function(curBasicBlock, curSymbolTable, ident, nullptr, nullptr, retType);
         manager->setMainFunction(function);
         curFunction = function;
@@ -108,7 +124,12 @@ private:
 
     void visitStmt(StmtNode* node) {
         switch (node->getStmtType()) {
-            case StmtType::BLOCK: visitBlockStmt(node); break;
+            case StmtType::BLOCK: {
+                curSymbolTable = new SymbolTable(curSymbolTable);
+                visitBlockStmt(node);
+                curSymbolTable = curSymbolTable->getParent();
+                break;
+            }
             case StmtType::BREAK: visitBreakStmt(node); break;
             case StmtType::CONTINUE: visitContinueStmt(node); break;
             case StmtType::EXP: visitExpStmt(node); break;
@@ -140,9 +161,9 @@ private:
     }
 
     void visitGetintStmt(StmtNode* node) {
-        if(!curSymbolTable->getSymbolTerms()->count(node->getLVal()->getIdent()->getVal())) {
+        if(!checkSymbolTable(node->getLVal()->getIdent()->getVal())) {
             errorList.emplace_back(node->getLVal()->getIdent()->getLine(), "c");
-        } else if(curSymbolTable->getSymbolTerm(node->getLVal()->getIdent()->getVal())->getIsConstant()) {
+        } else if(getSymbolTermIteratively(node->getLVal()->getIdent()->getVal())->getIsConstant()) {
             errorList.emplace_back(node->getLVal()->getIdent()->getLine(), "h");
         } else {
             new GetintInstr(curBasicBlock, visitLVal(node->getLVal()));
@@ -150,30 +171,27 @@ private:
     }
 
     Value* visitLVal(LValNode* node) {
-        if (curSymbolTable == nullptr) {
-            if(!globalSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal())) {
-                errorList.emplace_back(node->getIdent()->getLine(), "c"); return 0;
-            } else {
-                return globalSymbolTable->getSymbolTerm(node->getIdent()->getVal())->getAllocaInstr();
-            }
+        if(!checkSymbolTable(node->getIdent()->getVal())) {
+            errorList.emplace_back(node->getIdent()->getLine(), "c"); return 0;
         } else {
-            if(!curSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal())) {
-                errorList.emplace_back(node->getIdent()->getLine(), "c"); return 0;
-            } else {
-                return curSymbolTable->getSymbolTerm(node->getIdent()->getVal())->getAllocaInstr();
+            for(auto i : node->getExps()) {
+                visitExp(dynamic_cast<ExpNode*>(i));
             }
+            return getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr();
         }
     }
 
     void visitIfStmt(StmtNode* node) {
-
+        for(auto i : node->getStmts()) {
+            visitStmt(i);
+        }
     }
 
     void visitLValAssignStmt(StmtNode* node) {
         /* TODO array */
-        if(!curSymbolTable->hasSymbolTerm(node->getLVal()->getIdent()->getVal())) {
+        if(!checkSymbolTable(node->getLVal()->getIdent()->getVal())) {
             errorList.emplace_back(node->getLVal()->getIdent()->getLine(), "c");
-        } else if(curSymbolTable->getSymbolTerm(node->getLVal()->getIdent()->getVal())->getIsConstant()) {
+        } else if(getSymbolTermIteratively(node->getLVal()->getIdent()->getVal())->getIsConstant()) {
             errorList.emplace_back(node->getLVal()->getIdent()->getLine(), "h");
         } else {
             new StoreInstr(curBasicBlock, visitLVal(node->getLVal()), visitExp(node->getExps().front()));
@@ -218,7 +236,9 @@ private:
     }
 
     void visitWhileStmt(StmtNode* node) {
-
+        for(auto i : node->getStmts()) {
+            visitStmt(i);
+        }
     }
 
     void visitSemicnStmt(StmtNode* node) {
@@ -242,7 +262,7 @@ private:
     void visitConstDef(ConstDefNode* node, FuncType type, bool isConstant, bool isGlobal) {
         /* TODO: without array */
         if (isGlobal) {
-            if(manager->getFunctions().count(node->getIdent()->getVal()) || globalSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal())) {
+            if(manager->getFunctions().count(node->getIdent()->getVal()) || curSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal())) {
                 errorList.emplace_back(node->getIdent()->getLine(), "b");
             } else {
                 auto* allocaInstr = new AllocaInstr(globalBasicBlock, globalSymbolTable, node->getIdent()->getVal(), type, isConstant, true, 0);
@@ -251,7 +271,7 @@ private:
                 GLOBALINTS.insert(new GlobalInt(allocaInstr));
             }
         } else {
-            if(manager->getFunctions().count(node->getIdent()->getVal()) || globalSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal()) || curSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal())) {
+            if(curSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal())) {
                 errorList.emplace_back(node->getIdent()->getLine(), "b");
             } else {
                 auto* allocaInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent()->getVal(), type, isConstant, false, curFunction->genInstrIdx());
@@ -283,7 +303,7 @@ private:
     void visitVarDef(VarDefNode* node, FuncType type, bool isConstant, bool isGlobal) {
         /* TODO: without array */
         if (isGlobal) {
-            if(manager->getFunctions().count(node->getIdent()->getVal()) || globalSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal())) {
+            if(manager->getFunctions().count(node->getIdent()->getVal()) || curSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal())) {
                 errorList.emplace_back(node->getIdent()->getLine(), "b");
             } else {
                 auto* allocaInstr = new AllocaInstr(globalBasicBlock, globalSymbolTable, node->getIdent()->getVal(), type, isConstant, true, 0);
@@ -294,7 +314,7 @@ private:
                 GLOBALINTS.insert(new GlobalInt(allocaInstr));
             }
         } else {
-            if(manager->getFunctions().count(node->getIdent()->getVal()) || globalSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal()) || curSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal())) {
+            if(curSymbolTable->getSymbolTerms()->count(node->getIdent()->getVal())) {
                 errorList.emplace_back(node->getIdent()->getLine(), "b");
             } else {
                 auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent()->getVal(), type, isConstant, false, curFunction->genInstrIdx());
@@ -366,7 +386,7 @@ private:
                         for(int i = 0; i < exps.size(); ++i) {
                             Value* exp = visitExp(dynamic_cast<ExpNode *>(exps.at(i)));
                             if(exp != nullptr) {
-                                if(exp->getFuncType() != manager->getFunction(node->getIdent()->getVal())->getParams()->at(i)->getFuncType() || getDemensionality(dynamic_cast<ExpNode *>(exps.at(i))) != manager->getFunction(node->getIdent()->getVal())->getParams()->at(i)->getDimensionality()) {
+                                if(exp->getFuncType() != manager->getFunction(node->getIdent()->getVal())->getParams()->at(i)->getFuncType() || getDimensionality(dynamic_cast<ExpNode *>(exps.at(i))) != manager->getFunction(node->getIdent()->getVal())->getParams()->at(i)->getDimensionality()) {
                                     errorList.emplace_back(node->getIdent()->getLine(), "e");
                                 } else {
                                     values->emplace_back(visitExp(dynamic_cast<ExpNode *>(exps.at(i))));
@@ -399,7 +419,7 @@ private:
         return 0;
     }
 
-    int getDemensionality(ExpNode* node) {
+    int getDimensionality(ExpNode* node) {
         AddExpNode* addExp = dynamic_cast<AddExpNode *>(node->getChild());
         if (addExp->getMulExps().size() == 1) {
             MulExpNode* mulExp = dynamic_cast<MulExpNode *>(addExp->getMulExps().front());
@@ -409,10 +429,10 @@ private:
                     PrimaryExpNode* primaryExp = unaryExp->getPrimaryExp();
                     if (primaryExp->getLVal() != nullptr) {
                         LValNode* lVal = primaryExp->getLVal();
-                        if(!curFunction->getSymbolTable()->getSymbolTerms()->count(lVal->getIdent()->getVal())) {
+                        if(!checkSymbolTable(lVal->getIdent()->getVal())) {
                             errorList.emplace_back(lVal->getIdent()->getLine(), "c"); return 0;
                         } else {
-                            return curFunction->getSymbolTable()->getSymbolTerms()->at(lVal->getIdent()->getVal())->getDimensionality() - lVal->getExps().size();
+                            return getSymbolTermIteratively(lVal->getIdent()->getVal())->getDimensionality() - lVal->getExps().size();
                         }
                     } else {
                         return 0;
@@ -459,6 +479,7 @@ public:
         globalFunction = new Function(globalBasicBlock, globalSymbolTable, "", nullptr, nullptr, FuncType::VOID);
         manager->setGlobalBasicBlock(globalBasicBlock);
         curFunction = globalFunction;
+        curSymbolTable = globalSymbolTable;
         visitAst(root);
     }
     Manager* getManager() {

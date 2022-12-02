@@ -20,6 +20,7 @@ private:
     vector<int> lineTag;
     int nowLine = 0;
     tuple<bool, SyntaxType, string> lex() {
+        cursor->skipBlank();
         char first = cursor->scanToken();
         switch (first) {
             case '!':
@@ -123,13 +124,12 @@ public:
     explicit Lexer(ifstream* f) {
         cursor = new LexCursor(fileRead(f));
         while (!cursor->judgeEnd()) {
-            cursor->skipBlank();
-            while(cursor->getCurIndex() >= lineTag.at(nowLine)) ++nowLine;
             auto t = lex();
             if (get<0>(t)) {
+                while(cursor->getCurIndex() > lineTag.at(nowLine)) ++nowLine;
                 lexerList.emplace_back(get<1>(t), get<2>(t), nowLine + 1);
-                cursor->skipBlank();
             }
+            cursor->skipBlank();
         }
     }
 

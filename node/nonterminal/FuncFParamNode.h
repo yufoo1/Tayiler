@@ -40,7 +40,7 @@ public:
         return dynamic_cast<IdentNode *>(ident);
     }
 
-    bool getDimensionality() {
+    int getDimensionality() {
         return dimensionality;
     }
 
