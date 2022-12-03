@@ -21,11 +21,10 @@ private:
     vector<Instr*> instrs;
 public:
     BasicBlock() {
-        label = "EMPYT_BB" + to_string(++EMPTYBASICBLOCKCNT);
+        this->label = "b" + to_string((++BASICBLOCKCNT));
     }
 
     void setFunction(Function* function) {
-        this->label = "b" + to_string((++BASICBLOCKCNT));
         this->function = function;
     }
 

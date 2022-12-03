@@ -20,7 +20,6 @@ public:
     }
 
     void insertNode(Node* node) override {
-        set<SyntaxType> OP = {SyntaxType::PLUS, SyntaxType::MINU};
         if (node->getType() == SyntaxType::EQEXP) {
             eqExps.emplace_back(node);
         }

@@ -5,6 +5,8 @@
 #ifndef TAYILER_VISITOR_H
 #define TAYILER_VISITOR_H
 
+#include <utility>
+
 #include "../node/Node.h"
 #include "../Manager/Manager.h"
 #include "llvm-ir/instr/StoreInstr.h"
@@ -16,6 +18,9 @@
 #include "llvm-ir/instr/PutintInstr.h"
 #include "llvm-ir/instr/CallInstr.h"
 #include "llvm-ir/global-val/GlobalInt.h"
+#include "llvm-ir/instr/IcmpInstr.h"
+#include "llvm-ir/instr/BrInstr.h"
+
 class Visitor {
 
 private:
@@ -32,7 +37,7 @@ private:
         visitCompUnit(dynamic_cast<CompUnitNode *>(root));
     }
 
-    bool checkSymbolTable(string ident) {
+    bool checkSymbolTable(const string& ident) {
         SymbolTable* cur = curSymbolTable;
         while(cur != nullptr) {
             if(cur->getSymbolTerms()->count(ident)) {
@@ -43,7 +48,7 @@ private:
         return false;
     }
 
-    SymbolTerm* getSymbolTermIteratively(string ident) {
+    SymbolTerm* getSymbolTermIteratively(const string& ident) {
         SymbolTable* cur = curSymbolTable;
         while(cur != nullptr) {
             if(cur->getSymbolTerms()->count(ident)) {
@@ -172,7 +177,7 @@ private:
 
     Value* visitLVal(LValNode* node) {
         if(!checkSymbolTable(node->getIdent()->getVal())) {
-            errorList.emplace_back(node->getIdent()->getLine(), "c"); return 0;
+            errorList.emplace_back(node->getIdent()->getLine(), "c"); return nullptr;
         } else {
             for(auto i : node->getExps()) {
                 visitExp(dynamic_cast<ExpNode*>(i));
@@ -182,8 +187,66 @@ private:
     }
 
     void visitIfStmt(StmtNode* node) {
-        for(auto i : node->getStmts()) {
-            visitStmt(i);
+        auto* condBasicBlock = new BasicBlock();
+        auto* ifBasicBlock = new BasicBlock();
+        auto* endBasicBlock = new BasicBlock();
+        curFunction->addBasicBlock(condBasicBlock);
+        curFunction->addBasicBlock(ifBasicBlock);
+        curFunction->addBasicBlock(endBasicBlock);
+        curBasicBlock = condBasicBlock;
+        Value* icmp = visitCond(node->getCond());
+        if(node->getStmts().size() == 1) {
+            new BrInstr(curBasicBlock, icmp, ifBasicBlock, endBasicBlock);
+            curBasicBlock = ifBasicBlock;
+            visitStmt(node->getStmts().front());
+        } else {
+            YASSERT(node->getStmts().size() == 2)
+            auto* elseBasicBlock = new BasicBlock();
+            curFunction->addBasicBlock(elseBasicBlock);
+            new BrInstr(curBasicBlock, icmp, ifBasicBlock, elseBasicBlock);
+            curBasicBlock = ifBasicBlock;
+            visitStmt(node->getStmts().front());
+            new BrInstr(curBasicBlock, endBasicBlock);
+            curBasicBlock = elseBasicBlock;
+            visitStmt(node->getStmts().back());
+        }
+        new BrInstr(curBasicBlock, endBasicBlock);
+        curBasicBlock = endBasicBlock;
+    }
+
+    Value* visitCond(CondNode* node) {
+        return visitLOrExp(dynamic_cast<LOrExpNode*>(node->getChild()));
+    }
+
+    Value* visitLOrExp(LOrExpNode* node) {
+        if(node->getLAndExps().size() == 1) {
+            return visitLAndExp(dynamic_cast<LAndExpNode *>(node->getLAndExps().front()));
+        } else {
+
+        }
+    }
+
+    Value* visitLAndExp(LAndExpNode* node) {
+        if(node->getEqExps().size() == 1) {
+            return visitEqExp(dynamic_cast<EqExpNode *>(node->getEqExps().front()));
+        } else {
+
+        }
+    }
+
+    Value* visitEqExp(EqExpNode* node) {
+        if(node->getRelExps().size() == 1) {
+            return visitRelExp(dynamic_cast<RelExpNode *>(node->getRelExps().front()));
+        } else {
+
+        }
+    }
+
+    Value* visitRelExp(RelExpNode* node) {
+        if(node->getAddExps().size() == 1) {
+            return new IcmpInstr(curBasicBlock, visitAddExp(dynamic_cast<AddExpNode *>(node->getAddExps().front())), CONSTANT_ZERO, SyntaxType::NEQ, curFunction->genInstrIdx());
+        } else {
+
         }
     }
 
@@ -229,16 +292,25 @@ private:
     }
 
     void visitReturnStmt(StmtNode* node) {
-        curFunction->setHasRet(true);
         new ReturnInstr(curBasicBlock, node->getExps().empty() ? nullptr : visitExp(node->getExps().front()),
                         curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK) ? nullptr : curFunction->getSymbolTable()->getSymbolTerms()->at("")->getAllocaInstr(),
                         curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK));
     }
 
     void visitWhileStmt(StmtNode* node) {
-        for(auto i : node->getStmts()) {
-            visitStmt(i);
-        }
+        auto* condBasicBlock = new BasicBlock();
+        auto* whileBasicBlock = new BasicBlock();
+        auto* endBasicBlock = new BasicBlock();
+        curFunction->addBasicBlock(condBasicBlock);
+        curFunction->addBasicBlock(whileBasicBlock);
+        curFunction->addBasicBlock(endBasicBlock);
+        curBasicBlock = condBasicBlock;
+        Value* icmp = visitCond(node->getCond());
+        new BrInstr(curBasicBlock, icmp, whileBasicBlock, endBasicBlock);
+        curBasicBlock = whileBasicBlock;
+        visitStmt(node->getStmts().front());
+        new BrInstr(curBasicBlock, condBasicBlock);
+        curBasicBlock = endBasicBlock;
     }
 
     void visitSemicnStmt(StmtNode* node) {
@@ -286,7 +358,7 @@ private:
             return visitConstExp(node->getConstExp());
         } else {
             /* TODO {InitVal{...}}*/
-            error(); return 0;
+            error(); return nullptr;
         }
     }
 
@@ -331,7 +403,7 @@ private:
             return visitExp(node->getExp());
         } else {
             /* TODO {InitVal{...}}*/
-            error(); return 0;
+            error(); return nullptr;
         }
     }
 
@@ -414,9 +486,9 @@ private:
             }
             return unaryExp;
         } else {
-            error(); return 0;
+            error(); return nullptr;
         }
-        return 0;
+        error(); return nullptr;
     }
 
     int getDimensionality(ExpNode* node) {
@@ -456,7 +528,7 @@ private:
         } else if (node->getNumber() != nullptr) {
             return visitNumber(node->getNumber());
         } else {
-            error(); return { };
+            error(); return nullptr;
         }
     }
 
@@ -472,7 +544,7 @@ private:
 
 public:
     explicit Visitor(Node* root, vector<tuple<int, string>> errorList) {
-        this->errorList = errorList;
+        this->errorList = std::move(errorList);
         manager = new Manager(&this->errorList);
         globalSymbolTable = new SymbolTable(nullptr);
         globalBasicBlock = new BasicBlock();

@@ -20,13 +20,12 @@ public:
     }
 
     void insertNode(Node* node) override {
-        set<SyntaxType> OP = {SyntaxType::PLUS, SyntaxType::MINU};
-        if (node->getType() == SyntaxType::EQEXP) {
+        if (node->getType() == SyntaxType::LANDEXP) {
             lAndExps.emplace_back(node);
         }
     }
 
-    vector<Node*> getEqExps() {
+    vector<Node*> getLAndExps() {
         return lAndExps;
     }
 };

@@ -14,7 +14,7 @@ static void ALLOCSTACK(Value* value) {
 }
 class Instr: public Value {
 public:
-    Instr() { }
+    Instr() = default;
 
     virtual string toLlvmString() override { return 0; }
 

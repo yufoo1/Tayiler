@@ -7,10 +7,10 @@ int main() {
     ofstream output("output.txt"), llvmFile("llvm.txt"), mipsFile("mips.txt"), errorFile("error.txt");
     Lexer lexer(&input);
     Parser parser(lexer.getLexerList());
-    parser.fileWrite(&output);
+//    parser.fileWrite(&output);
     Visitor visitor(parser.getSyntaxTreeRoot(), parser.getErrorList());
-    visitor.getManager()->dumpError(&errorFile);
-//    visitor.getManager()->dumpLlvm(&llvmFile);
-//    visitor.getManager()->dumpMips(&mipsFile);
+//    visitor.getManager()->dumpError(&errorFile);
+    visitor.getManager()->dumpLlvm(&llvmFile);
+    visitor.getManager()->dumpMips(&mipsFile);
     return 0;
 }

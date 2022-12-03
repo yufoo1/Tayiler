@@ -55,7 +55,6 @@ private:
     list<BasicBlock*> basicBlocks;
     BasicBlock* retBasicBlock = nullptr;
     SymbolTable* symbolTable = nullptr;
-    bool hasRet = false;
     int localInstrCnt;
 public:
     explicit Function(BasicBlock* entry, SymbolTable* symbolTable, string ident, vector<Param*>* params, Param* retParam, FuncType retType) {
@@ -110,15 +109,7 @@ public:
         return symbolTable;
     }
 
-    void setHasRet(bool hasRet) {
-        this->hasRet = hasRet;
-    }
-
-    bool getHasRet() {
-        return hasRet;
-    }
-
-    string toLlvmString() override {
+    string toLlvmString() {
         string s = "define dso_local ";
         s += FuncType2String.at(retType) + " @" + getIdent() + "(";
         if (params != nullptr) {
@@ -139,7 +130,7 @@ public:
         return s;
     }
 
-    string toMipsString() override {
+    string toMipsString() {
         string s;
         for (auto i : basicBlocks) {
             s += i->getLabel() + ":\n";

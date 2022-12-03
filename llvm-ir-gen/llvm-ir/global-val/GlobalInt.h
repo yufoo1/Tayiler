@@ -27,7 +27,7 @@ public:
 
     string toMipsString() override {
         ALLOCSTACK(allocaUse->getValue());
-        return { };
+        return "";
     }
 };
 #endif //TAYILER_GLOBALINT_H

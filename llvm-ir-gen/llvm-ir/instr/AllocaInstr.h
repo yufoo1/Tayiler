@@ -32,7 +32,7 @@ public:
 
     string toMipsString() override {
         ALLOCSTACK(this);
-        return { };
+        return "";
     }
 };
 #endif //TAYILER_ALLOCAINSTR_H
