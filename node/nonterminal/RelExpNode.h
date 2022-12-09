@@ -21,7 +21,7 @@ public:
     }
 
     void insertNode(Node* node) override {
-        set<SyntaxType> OP = {SyntaxType::LSS, SyntaxType::GEQ, SyntaxType::LEQ, SyntaxType::GEQ};
+        set<SyntaxType> OP = {SyntaxType::LSS, SyntaxType::GRE, SyntaxType::LEQ, SyntaxType::GEQ};
         if (OP.count(node->getType())) {
             ops.emplace_back(node->getType());
         } else if (node->getType() == SyntaxType::ADDEXP) {
