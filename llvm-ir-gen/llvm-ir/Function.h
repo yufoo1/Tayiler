@@ -138,6 +138,7 @@ public:
                 string str = j->toMipsString();
                 s += str;
             }
+            s += "\tli $v0, 10\n\tsyscall\n";
         }
         return s;
     }

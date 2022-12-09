@@ -168,11 +168,11 @@ private:
     }
 
     void visitBreakStmt(StmtNode* node) {
-        /* TODO */
+        new BrInstr(curBasicBlock, loopFollows.top());
     }
 
     void visitContinueStmt(StmtNode* node) {
-        /* TODO */
+        new BrInstr(curBasicBlock, loopHeads.top());
     }
 
     Value* visitExpStmt(StmtNode* node) {
@@ -307,6 +307,7 @@ private:
                 first = new IcmpInstr(curBasicBlock, first, visitAddExp(
                         dynamic_cast<AddExpNode *>(node->getAddExps().at(i))), node->getOps().at(i - 1), curFunction->genInstrIdx());
             }
+            return first;
         }
     }
 
@@ -360,33 +361,32 @@ private:
     void visitWhileStmt(StmtNode* node) {
         curLoop = new Loop(curLoop);
         curLoop->setFunction(curFunction);
-        BasicBlock* condBlock = new BasicBlock();
+        auto* condBlock = new BasicBlock();
         curFunction->addBasicBlock(condBlock);
         curLoop->addBasicBlock(condBlock);
         new BrInstr(curBasicBlock, condBlock);
-        BasicBlock* body = new BasicBlock();
-        curFunction->addBasicBlock(body);
-        curLoop->addBasicBlock(body);
-        BasicBlock* follow = new BasicBlock();
-        curFunction->addBasicBlock(follow);
-        curLoop->addBasicBlock(follow);
+        auto* whileBasicBlock = new BasicBlock();
+        curFunction->addBasicBlock(whileBasicBlock);
+        curLoop->addBasicBlock(whileBasicBlock);
+        auto* endBasicBlock = new BasicBlock();
+        curFunction->addBasicBlock(endBasicBlock);
+        curLoop->addBasicBlock(endBasicBlock);
         curBasicBlock = condBlock;
         inLoop = true;
         inCond = true;
-        Value* cond = visitCond(node->getCond(), body, follow);
-        new BrInstr(curBasicBlock, cond, body, follow);
-        curBasicBlock = body;
+        Value* cond = visitCond(node->getCond(), whileBasicBlock, endBasicBlock);
+        new BrInstr(curBasicBlock, cond, whileBasicBlock, endBasicBlock);
+        curBasicBlock = whileBasicBlock;
         inCond = false;
         loopHeads.push(condBlock);
-        loopFollows.push(follow);
+        loopFollows.push(endBasicBlock);
         visitStmt(node->getStmts().front());
         loopHeads.pop();
         loopFollows.pop();
         new BrInstr(curBasicBlock, condBlock);
         inLoop = false;
-        curBasicBlock = follow;
+        curBasicBlock = endBasicBlock;
         curLoop = curLoop->getParent();
-
     }
 
     void visitSemicnStmt(StmtNode* node) {

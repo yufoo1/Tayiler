@@ -61,7 +61,6 @@ public:
         }
         *f << "\tjr $ra\n";
         *f << mainFunction->toMipsString();
-        *f << "\tli $v0, 10\n\tsyscall" << endl;
         f->close();
     }
 

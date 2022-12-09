@@ -37,7 +37,16 @@ public:
     }
 
     string toMipsString() override {
-        return "";
+        string s;
+        if (useSrc == nullptr) {
+            s += "\tb " + trueBasicBlock->getLabel() + "\n";
+        } else {
+            int rsPos = STACKPOSMAP.at(useSrc->getValue());
+            s += "\tlw $t0, " + to_string(rsPos) + "($sp)\n";
+            s += "\tbeq $t0, 1, " + trueBasicBlock->getLabel() + "\n";
+            s += "\tb " + falseBasicBlock->getLabel() + "\n";
+        }
+        return s;
     }
 };
 #endif //TAYILER_BRINSTR_H

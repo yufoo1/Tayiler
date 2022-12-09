@@ -44,7 +44,58 @@ public:
     }
 
     string toMipsString() override {
-       return "";
+        string s;
+        if (useSrc1->getValue()->isInstr()) {
+            int rsPos = STACKPOSMAP.at(useSrc1->getValue());
+            s += "\tlw $t0, " + to_string(rsPos) + "($sp)\n";
+        } else {
+            s += "\tori $t0, $0, " + useSrc1->getValue()->getVal() + "\n";
+        }
+        if (useSrc2->getValue()->isInstr()) {
+            int rtPos = STACKPOSMAP.at(useSrc2->getValue());
+            s += "\tlw $t1, " + to_string(rtPos) + "($sp)\n";
+        } else {
+            s += "\tori $t1, $0, " + useSrc2->getValue()->getVal() + "\n";
+        }
+        ALLOCSTACK(this);
+        int rdPos = STACKPOSMAP.at(this);
+        switch (op) {
+            case SyntaxType::LSS: {
+                s += "\tslt $t0, $t0, $t1\n";
+                break;
+            }
+            case SyntaxType::LEQ: {
+                s += "\tslt $t0, $t1, $t0\n";
+                s += "\tori $t1, $0, 1\n";
+                s += "\txor $t0, $t0, $t1\n";
+                break;
+            }
+            case SyntaxType::GRE: {
+                s += "\tslt $t0, $t1, $t0\n";
+                break;
+            }
+            case SyntaxType::GEQ: {
+                s += "\tslt $t0, $t0, $t1\n";
+                s += "\tori $t1, $0, 1\n";
+                s += "\txor $t0, $t0, $t1\n";
+                break;
+            }
+            case SyntaxType::EQL: {
+                s += "\tslt $t2, $t0, $t1\n";
+                s += "\tslt $t0, $t1, $t0\n";
+                s += "\tnor $t0, $t0, $t2\n";
+                s += "\tandi $t0, $t0, 1\n";
+                break;
+            }
+            case SyntaxType::NEQ: {
+                s += "\tslt $t2, $t0, $t1\n";
+                s += "\tslt $t0, $t1, $t0\n";
+                s += "\tor $t0, $t0, $t2\n";
+                break;
+            }
+        }
+        s += "\tsw $t0, " + to_string(rdPos) + "($sp)\n";
+        return s;
    }
 };
 #endif //TAYILER_ICMPINSTR_H
