@@ -292,7 +292,7 @@ private:
         } else {
             for(int i = 1; i < node->getRelExps().size(); ++i) {
                 first = new IcmpInstr(curBasicBlock, first, visitRelExp(
-                        dynamic_cast<RelExpNode *>(node->getRelExps().at(i))), SyntaxType::EQL, curFunction->genInstrIdx());
+                        dynamic_cast<RelExpNode *>(node->getRelExps().at(i))), node->getOps().at(i - 1), curFunction->genInstrIdx());
             }
         }
         return first;
