@@ -154,11 +154,11 @@ private:
     }
 
     void visitBreakStmt(StmtNode* node) {
-
+        /* TODO */
     }
 
     void visitContinueStmt(StmtNode* node) {
-
+        /* TODO */
     }
 
     Value* visitExpStmt(StmtNode* node) {
@@ -187,66 +187,105 @@ private:
     }
 
     void visitIfStmt(StmtNode* node) {
-        auto* condBasicBlock = new BasicBlock();
-        auto* ifBasicBlock = new BasicBlock();
-        auto* endBasicBlock = new BasicBlock();
-        curFunction->addBasicBlock(condBasicBlock);
-        curFunction->addBasicBlock(ifBasicBlock);
-        curFunction->addBasicBlock(endBasicBlock);
-        curBasicBlock = condBasicBlock;
-        Value* icmp = visitCond(node->getCond());
-        if(node->getStmts().size() == 1) {
-            new BrInstr(curBasicBlock, icmp, ifBasicBlock, endBasicBlock);
-            curBasicBlock = ifBasicBlock;
-            visitStmt(node->getStmts().front());
-        } else {
+        auto* thenBlock = new BasicBlock();
+        curFunction->addBasicBlock(thenBlock);
+        auto* followBlock = new BasicBlock();
+        curFunction->addBasicBlock(followBlock);
+        if(node->getStmts().size() != 1) {
+            auto* elseBlock = new BasicBlock();
+            curFunction->addBasicBlock(elseBlock);
             YASSERT(node->getStmts().size() == 2)
-            auto* elseBasicBlock = new BasicBlock();
-            curFunction->addBasicBlock(elseBasicBlock);
-            new BrInstr(curBasicBlock, icmp, ifBasicBlock, elseBasicBlock);
-            curBasicBlock = ifBasicBlock;
+            Value* cond = visitCond(node->getCond(), thenBlock, elseBlock);
+            new BrInstr(curBasicBlock, cond, thenBlock, elseBlock);
+            curBasicBlock = thenBlock;
             visitStmt(node->getStmts().front());
-            new BrInstr(curBasicBlock, endBasicBlock);
-            curBasicBlock = elseBasicBlock;
+            new BrInstr(curBasicBlock, followBlock);
+            curBasicBlock = elseBlock;
             visitStmt(node->getStmts().back());
-        }
-        new BrInstr(curBasicBlock, endBasicBlock);
-        curBasicBlock = endBasicBlock;
-    }
-
-    Value* visitCond(CondNode* node) {
-        return visitLOrExp(dynamic_cast<LOrExpNode*>(node->getChild()));
-    }
-
-    Value* visitLOrExp(LOrExpNode* node) {
-        if(node->getLAndExps().size() == 1) {
-            return visitLAndExp(dynamic_cast<LAndExpNode *>(node->getLAndExps().front()));
         } else {
-
+            Value* cond = visitCond(node->getCond(), thenBlock, followBlock);
+            new BrInstr(curBasicBlock, cond, thenBlock, followBlock);
+            curBasicBlock = thenBlock;
+            visitStmt(node->getStmts().front());
         }
+        new BrInstr(curBasicBlock, followBlock);
+        curBasicBlock = followBlock;
     }
 
-    Value* visitLAndExp(LAndExpNode* node) {
+    Value* visitCond(CondNode* node, BasicBlock* trueBasicBlock, BasicBlock* falseBasicBlock) {
+        return visitLOrExp(dynamic_cast<LOrExpNode*>(node->getChild()), trueBasicBlock, falseBasicBlock);
+    }
+
+    Value* visitLOrExp(LOrExpNode* node, BasicBlock* trueBasicBlock, BasicBlock* falseBasicBlock) {
+        BasicBlock* nextBlock = falseBasicBlock;
+        BasicBlock* preFalseBlock = falseBasicBlock;
+        bool flag = false;
+        if(node->getLAndExps().size() > 1) {
+            flag = true;
+            nextBlock = new BasicBlock();
+            curFunction->addBasicBlock(nextBlock);
+        }
+        Value* first = visitLAndExp(dynamic_cast<LAndExpNode *>(node->getLAndExps().front()), nextBlock);
+        for(int i = 1; i < node->getLAndExps().size(); ++i) {
+            if(flag) {
+                flag = false;
+            } else {
+                nextBlock = new BasicBlock();
+                curFunction->addBasicBlock(nextBlock);
+            }
+            new BrInstr(curBasicBlock, first, trueBasicBlock, nextBlock);
+            curBasicBlock = nextBlock;
+            if(i + 1 < node->getLAndExps().size() - 1) {
+                flag = true;
+                falseBasicBlock = new BasicBlock();
+                curFunction->addBasicBlock(falseBasicBlock);
+                nextBlock = falseBasicBlock;
+            } else {
+                falseBasicBlock = preFalseBlock;
+            }
+            first = visitLAndExp(dynamic_cast<LAndExpNode *>(node->getLAndExps().at(i)), falseBasicBlock);
+        }
+        return first;
+    }
+
+    Value* visitLAndExp(LAndExpNode* node, BasicBlock* falseBasicBlock) {
+        Value* first = visitEqExp(dynamic_cast<EqExpNode *>(node->getEqExps().front()));
         if(node->getEqExps().size() == 1) {
-            return visitEqExp(dynamic_cast<EqExpNode *>(node->getEqExps().front()));
+            return first;
         } else {
-
+            for(int i = 1; i < node->getEqExps().size(); ++i) {
+                auto* nextBlock = new BasicBlock();
+                curFunction->addBasicBlock(nextBlock);
+                new BrInstr(curBasicBlock, first, nextBlock, falseBasicBlock);
+                curBasicBlock = nextBlock;
+                first = visitEqExp(dynamic_cast<EqExpNode *>(node->getEqExps().at(i)));
+            }
+            return first;
         }
     }
 
     Value* visitEqExp(EqExpNode* node) {
+        Value* first = visitRelExp(dynamic_cast<RelExpNode *>(node->getRelExps().front()));
         if(node->getRelExps().size() == 1) {
-            return visitRelExp(dynamic_cast<RelExpNode *>(node->getRelExps().front()));
+            return new IcmpInstr(curBasicBlock, first, CONSTANT_ZERO, SyntaxType::NEQ, curFunction->genInstrIdx());
         } else {
-
+            for(int i = 1; i < node->getRelExps().size(); ++i) {
+                first = new IcmpInstr(curBasicBlock, first, visitRelExp(
+                        dynamic_cast<RelExpNode *>(node->getRelExps().at(i))), SyntaxType::EQL, curFunction->genInstrIdx());
+            }
         }
+        return first;
     }
 
     Value* visitRelExp(RelExpNode* node) {
+        Value* first = visitAddExp(dynamic_cast<AddExpNode *>(node->getAddExps().front()));
         if(node->getAddExps().size() == 1) {
-            return new IcmpInstr(curBasicBlock, visitAddExp(dynamic_cast<AddExpNode *>(node->getAddExps().front())), CONSTANT_ZERO, SyntaxType::NEQ, curFunction->genInstrIdx());
+            return first;
         } else {
-
+            for(int i = 1; i < node->getAddExps().size(); ++i) {
+                first = new IcmpInstr(curBasicBlock, first, visitAddExp(
+                        dynamic_cast<AddExpNode *>(node->getAddExps().at(i))), node->getOps().at(i - 1), curFunction->genInstrIdx());
+            }
         }
     }
 
@@ -298,18 +337,14 @@ private:
     }
 
     void visitWhileStmt(StmtNode* node) {
-        auto* condBasicBlock = new BasicBlock();
-        auto* whileBasicBlock = new BasicBlock();
+        auto* thenBasicBlock = new BasicBlock();
         auto* endBasicBlock = new BasicBlock();
-        curFunction->addBasicBlock(condBasicBlock);
-        curFunction->addBasicBlock(whileBasicBlock);
+        curFunction->addBasicBlock(thenBasicBlock);
         curFunction->addBasicBlock(endBasicBlock);
-        curBasicBlock = condBasicBlock;
-        Value* icmp = visitCond(node->getCond());
-        new BrInstr(curBasicBlock, icmp, whileBasicBlock, endBasicBlock);
-        curBasicBlock = whileBasicBlock;
+        visitCond(node->getCond(), thenBasicBlock, endBasicBlock);
+        curBasicBlock = thenBasicBlock;
         visitStmt(node->getStmts().front());
-        new BrInstr(curBasicBlock, condBasicBlock);
+//        /* TODO rejudge*/
         curBasicBlock = endBasicBlock;
     }
 

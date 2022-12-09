@@ -9,7 +9,6 @@
 #include "list"
 
 static int BASICBLOCKCNT = 0;
-static int EMPTYBASICBLOCKCNT = 0;
 
 class Function;
 class Instr;
@@ -21,7 +20,7 @@ private:
     vector<Instr*> instrs;
 public:
     BasicBlock() {
-        this->label = "b" + to_string((++BASICBLOCKCNT));
+        label = "b" + to_string((++BASICBLOCKCNT));
     }
 
     void setFunction(Function* function) {
