@@ -7,11 +7,11 @@
 
 #include "Function.h"
 #include "list"
+#include "Loop.h"
 
 static int BASICBLOCKCNT = 0;
 
 class Function;
-class Instr;
 
 class BasicBlock: public Value {
 private:
@@ -20,7 +20,7 @@ private:
     vector<Instr*> instrs;
 public:
     BasicBlock() {
-        label = "b" + to_string((++BASICBLOCKCNT));
+        label = "b" + to_string((BASICBLOCKCNT++));
     }
 
     void setFunction(Function* function) {

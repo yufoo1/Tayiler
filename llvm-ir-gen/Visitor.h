@@ -20,6 +20,7 @@
 #include "llvm-ir/global-val/GlobalInt.h"
 #include "llvm-ir/instr/IcmpInstr.h"
 #include "llvm-ir/instr/BrInstr.h"
+#include "llvm-ir/Loop.h"
 
 class Visitor {
 
@@ -31,6 +32,11 @@ private:
     SymbolTable* globalSymbolTable = nullptr;
     Function* globalFunction = nullptr;
     Function* curFunction = nullptr;
+    Loop* curLoop = nullptr;
+    bool inLoop = false;
+    bool inCond = false;
+    stack<BasicBlock *> loopHeads;
+    stack<BasicBlock *> loopFollows;
     vector<tuple<int, string>> errorList;
 
     void visitAst(Node* root) {
@@ -66,11 +72,14 @@ private:
     }
 
     void visitFuncDef(FuncDefNode* node) {
+        curLoop = new Loop(nullptr);
         if(manager->getFunctions().count(node->getIdent()->getVal()) || checkSymbolTable(node->getIdent()->getVal())) {
             errorList.emplace_back(node->getIdent()->getLine(), "b");
         }
         auto* entry = new BasicBlock();
+        curLoop->addBasicBlock(entry);
         curBasicBlock = entry;
+        curLoop->setHeader(entry);
         curSymbolTable = new SymbolTable(globalSymbolTable);
         auto *params = new vector<Param*>;
         if (node->getFunFParams() != nullptr) {
@@ -82,6 +91,7 @@ private:
         auto retParam = new Param("", SyntaxType2FuncType.at(node->getFuncType()->getTokenType()), -1);
         auto* function = new Function(entry, curSymbolTable, node->getIdent()->getVal(), params, retParam, SyntaxType2FuncType.at(node->getFuncType()->getTokenType()));
         curFunction = function;
+        curLoop->setFunction(function);
         manager->addFunction(function);
         for (auto i : *params) {
             if(curSymbolTable->getSymbolTerms()->count(i->getIdent())) {
@@ -99,14 +109,18 @@ private:
     }
 
     void visitMainFuncDef(MainFuncDefNode* node) {
+        curLoop = new Loop(nullptr);
         FuncType retType = FuncType::INT32;
         auto* entry = new BasicBlock();
+        curLoop->addBasicBlock(entry);
         string ident = ReservedWordMapReversed.at(SyntaxType::MAINTK);
         curBasicBlock = entry;
+        curLoop->setHeader(entry);
         curSymbolTable = new SymbolTable(globalSymbolTable);
         auto* function = new Function(curBasicBlock, curSymbolTable, ident, nullptr, nullptr, retType);
         manager->setMainFunction(function);
         curFunction = function;
+        curLoop->setFunction(function);
         visitBlock(node->getBlock());
         curSymbolTable = curSymbolTable->getParent();
         curBasicBlock = nullptr, curFunction = nullptr;
@@ -189,11 +203,14 @@ private:
     void visitIfStmt(StmtNode* node) {
         auto* thenBlock = new BasicBlock();
         curFunction->addBasicBlock(thenBlock);
+        curLoop->addBasicBlock(thenBlock);
         auto* followBlock = new BasicBlock();
         curFunction->addBasicBlock(followBlock);
+        curLoop->addBasicBlock(followBlock);
         if(node->getStmts().size() != 1) {
             auto* elseBlock = new BasicBlock();
             curFunction->addBasicBlock(elseBlock);
+            curLoop->addBasicBlock(elseBlock);
             YASSERT(node->getStmts().size() == 2)
             Value* cond = visitCond(node->getCond(), thenBlock, elseBlock);
             new BrInstr(curBasicBlock, cond, thenBlock, elseBlock);
@@ -224,6 +241,7 @@ private:
             flag = true;
             nextBlock = new BasicBlock();
             curFunction->addBasicBlock(nextBlock);
+            curLoop->addBasicBlock(nextBlock);
         }
         Value* first = visitLAndExp(dynamic_cast<LAndExpNode *>(node->getLAndExps().front()), nextBlock);
         for(int i = 1; i < node->getLAndExps().size(); ++i) {
@@ -232,6 +250,7 @@ private:
             } else {
                 nextBlock = new BasicBlock();
                 curFunction->addBasicBlock(nextBlock);
+                curLoop->addBasicBlock(nextBlock);
             }
             new BrInstr(curBasicBlock, first, trueBasicBlock, nextBlock);
             curBasicBlock = nextBlock;
@@ -239,6 +258,7 @@ private:
                 flag = true;
                 falseBasicBlock = new BasicBlock();
                 curFunction->addBasicBlock(falseBasicBlock);
+                curLoop->addBasicBlock(falseBasicBlock);
                 nextBlock = falseBasicBlock;
             } else {
                 falseBasicBlock = preFalseBlock;
@@ -256,6 +276,7 @@ private:
             for(int i = 1; i < node->getEqExps().size(); ++i) {
                 auto* nextBlock = new BasicBlock();
                 curFunction->addBasicBlock(nextBlock);
+                curLoop->addBasicBlock(nextBlock);
                 new BrInstr(curBasicBlock, first, nextBlock, falseBasicBlock);
                 curBasicBlock = nextBlock;
                 first = visitEqExp(dynamic_cast<EqExpNode *>(node->getEqExps().at(i)));
@@ -337,15 +358,35 @@ private:
     }
 
     void visitWhileStmt(StmtNode* node) {
-        auto* thenBasicBlock = new BasicBlock();
-        auto* endBasicBlock = new BasicBlock();
-        curFunction->addBasicBlock(thenBasicBlock);
-        curFunction->addBasicBlock(endBasicBlock);
-        visitCond(node->getCond(), thenBasicBlock, endBasicBlock);
-        curBasicBlock = thenBasicBlock;
+        curLoop = new Loop(curLoop);
+        curLoop->setFunction(curFunction);
+        BasicBlock* condBlock = new BasicBlock();
+        curFunction->addBasicBlock(condBlock);
+        curLoop->addBasicBlock(condBlock);
+        new BrInstr(curBasicBlock, condBlock);
+        BasicBlock* body = new BasicBlock();
+        curFunction->addBasicBlock(body);
+        curLoop->addBasicBlock(body);
+        BasicBlock* follow = new BasicBlock();
+        curFunction->addBasicBlock(follow);
+        curLoop->addBasicBlock(follow);
+        curBasicBlock = condBlock;
+        inLoop = true;
+        inCond = true;
+        Value* cond = visitCond(node->getCond(), body, follow);
+        new BrInstr(curBasicBlock, cond, body, follow);
+        curBasicBlock = body;
+        inCond = false;
+        loopHeads.push(condBlock);
+        loopFollows.push(follow);
         visitStmt(node->getStmts().front());
-//        /* TODO rejudge*/
-        curBasicBlock = endBasicBlock;
+        loopHeads.pop();
+        loopFollows.pop();
+        new BrInstr(curBasicBlock, condBlock);
+        inLoop = false;
+        curBasicBlock = follow;
+        curLoop = curLoop->getParent();
+
     }
 
     void visitSemicnStmt(StmtNode* node) {
@@ -501,7 +542,7 @@ private:
                             }
                         }
                     }
-                    vector<AllocaInstr *> *allocaInstrs = new vector<AllocaInstr*>;
+                    auto *allocaInstrs = new vector<AllocaInstr*>;
                     for (auto i: *manager->getFunction(node->getIdent()->getVal())->getParams()) {
                         allocaInstrs->emplace_back(dynamic_cast<AllocaInstr *>
                                                    (manager->getFunction(node->getIdent()->getVal())->getSymbolTable()->getSymbolTerm(i->getIdent())->getAllocaInstr()));
@@ -568,8 +609,8 @@ private:
     }
 
     Value* visitNumber(NumberNode* node) {
-        ConstantInt* constantInt = new ConstantInt(node->getChild()->getVal());
-        AluInstr* aluInstr = new AluInstr(curBasicBlock == nullptr ? globalBasicBlock : curBasicBlock, CONSTANT_ZERO, constantInt, SyntaxType::PLUS, curFunction == nullptr ? 0 : curFunction->genInstrIdx());
+        auto* constantInt = new ConstantInt(node->getChild()->getVal());
+        auto* aluInstr = new AluInstr(curBasicBlock == nullptr ? globalBasicBlock : curBasicBlock, CONSTANT_ZERO, constantInt, SyntaxType::PLUS, curFunction == nullptr ? 0 : curFunction->genInstrIdx());
         return aluInstr;
     }
 
