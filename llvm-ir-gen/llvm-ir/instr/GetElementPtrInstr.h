@@ -25,7 +25,7 @@ public:
                 to_string(globalString->getStr().length()) + " x " + FuncType2String.at(globalString->getFuncType()) + "]* " + globalString->getPrefix() + globalString->getLabel() + ", i32 0, i32 0";
     }
 
-    string toMipsString() {
+    string toMipsString_stack(string ident) {
         return "\tla $a0, " + globalString->getLabel() + "\n";
     }
 };

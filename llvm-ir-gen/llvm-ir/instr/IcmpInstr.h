@@ -43,22 +43,29 @@ public:
         return getVal() + " = icmp " + getOpString() + " " + FuncType2String.at(useSrc1->getValue()->getFuncType()) + " " + useSrc1->getValue()->getVal() + ", " + useSrc2->getValue()->getVal();
     }
 
-    string toMipsString() override {
+    string toMipsString_stack(string ident) override {
         string s;
         if (useSrc1->getValue()->isInstr()) {
-            int rsPos = STACKPOSMAP.at(useSrc1->getValue());
-            s += "\tlw $t0, " + to_string(rsPos) + "($sp)\n";
+            int rsPos = GETPOS(ident, useSrc1->getValue());
+            if(POSMAPHASPOS(ident, useSrc1->getValue())) {
+                s += "\tlw $t0, " + to_string(rsPos) + "($t7)\n";
+            } else {
+                s += "\tlw $t0, " + to_string(rsPos) + "($sp)\n";
+            }
         } else {
             s += "\tori $t0, $0, " + useSrc1->getValue()->getVal() + "\n";
         }
         if (useSrc2->getValue()->isInstr()) {
-            int rtPos = STACKPOSMAP.at(useSrc2->getValue());
-            s += "\tlw $t1, " + to_string(rtPos) + "($sp)\n";
+            int rtPos = GETPOS(ident, useSrc2->getValue());
+            if(POSMAPHASPOS(ident, useSrc2->getValue())) {
+                s += "\tlw $t1, " + to_string(rtPos) + "($t7)\n";
+            } else {
+                s += "\tlw $t1, " + to_string(rtPos) + "($sp)\n";
+            }
         } else {
             s += "\tori $t1, $0, " + useSrc2->getValue()->getVal() + "\n";
         }
-        ALLOCSTACK(this);
-        int rdPos = STACKPOSMAP.at(this);
+        int rdPos = GETPOS(ident, this);
         switch (op) {
             case SyntaxType::LSS: {
                 s += "\tslt $t0, $t0, $t1\n";
@@ -94,7 +101,11 @@ public:
                 break;
             }
         }
-        s += "\tsw $t0, " + to_string(rdPos) + "($sp)\n";
+        if(POSMAPHASPOS(ident, this)) {
+            s += "\tsw $t0, " + to_string(rdPos) + "($t7)\n";
+        } else {
+            s += "\tsw $t0, " + to_string(rdPos) + "($sp)\n";
+        }
         return s;
    }
 };

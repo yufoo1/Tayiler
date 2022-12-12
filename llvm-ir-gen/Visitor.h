@@ -35,6 +35,7 @@ private:
     Loop* curLoop = nullptr;
     bool inLoop = false;
     bool inCond = false;
+    bool hasReturnInstr = false;
     stack<BasicBlock *> loopHeads;
     stack<BasicBlock *> loopFollows;
     vector<tuple<int, string>> errorList;
@@ -73,6 +74,7 @@ private:
 
     void visitFuncDef(FuncDefNode* node) {
         curLoop = new Loop(nullptr);
+        hasReturnInstr = false;
         if(manager->getFunctions().count(node->getIdent()->getVal()) || checkSymbolTable(node->getIdent()->getVal())) {
             errorList.emplace_back(node->getIdent()->getLine(), "b");
         }
@@ -105,6 +107,9 @@ private:
         auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, retParam->getIdent(), retParam->getFuncType(), false, true, curFunction->genInstrIdx());
         curSymbolTable->addSymbolTerm(new SymbolTerm(retParam->getIdent(), retParam->getFuncType(), false, retParam->getDimensionality(), allocInstr));
         visitBlock(node->getBlock());
+        if(!hasReturnInstr) {
+            new ReturnInstr(curBasicBlock, nullptr, false);
+        }
         curSymbolTable = curSymbolTable->getParent();
     }
 
@@ -353,8 +358,8 @@ private:
     }
 
     void visitReturnStmt(StmtNode* node) {
+        hasReturnInstr = true;
         new ReturnInstr(curBasicBlock, node->getExps().empty() ? nullptr : visitExp(node->getExps().front()),
-                        curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK) ? nullptr : curFunction->getSymbolTable()->getSymbolTerms()->at("")->getAllocaInstr(),
                         curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK));
     }
 
@@ -494,7 +499,7 @@ private:
             vector<Node*> mulExps = node->getMulExps();
             vector<SyntaxType> ops = node->getOps();
             Value* mulExp = visitMulExp(dynamic_cast<MulExpNode *>(mulExps.front()));
-            YASSERT(mulExps.size() - 1 == ops.size());
+            YASSERT(mulExps.size() - 1 == ops.size())
             for (int i = 0; i < ops.size(); i++) {
                 mulExp = new AluInstr(curBasicBlock == nullptr ? globalBasicBlock : curBasicBlock, mulExp, visitMulExp(dynamic_cast<MulExpNode *>(mulExps.at(i + 1))), ops.at(i), curFunction->genInstrIdx());
             }
@@ -528,7 +533,7 @@ private:
                 if((node->getFuncRParams() == nullptr ? 0 : node->getFuncRParams()->getExps().size()) !=  manager->getFunction(node->getIdent()->getVal())->getParams()->size()) {
                     errorList.emplace_back(node->getIdent()->getLine(), "d");
                 } else {
-                    vector<Value *>* values = new vector<Value*>;
+                    auto* values = new vector<Value*>;
                     if (node->getFuncRParams() != nullptr) {
                         vector<Node*> exps = node->getFuncRParams()->getExps();
                         for(int i = 0; i < exps.size(); ++i) {
@@ -537,7 +542,7 @@ private:
                                 if(exp->getFuncType() != manager->getFunction(node->getIdent()->getVal())->getParams()->at(i)->getFuncType() || getDimensionality(dynamic_cast<ExpNode *>(exps.at(i))) != manager->getFunction(node->getIdent()->getVal())->getParams()->at(i)->getDimensionality()) {
                                     errorList.emplace_back(node->getIdent()->getLine(), "e");
                                 } else {
-                                    values->emplace_back(visitExp(dynamic_cast<ExpNode *>(exps.at(i))));
+                                    values->emplace_back(exp);
                                 }
                             }
                         }
@@ -547,17 +552,21 @@ private:
                         allocaInstrs->emplace_back(dynamic_cast<AllocaInstr *>
                                                    (manager->getFunction(node->getIdent()->getVal())->getSymbolTable()->getSymbolTerm(i->getIdent())->getAllocaInstr()));
                     }
-                    new CallInstr(curBasicBlock, manager->getFunction(node->getIdent()->getVal()), values, allocaInstrs);
-                    return manager->getFunction(node->getIdent()->getVal())->getSymbolTable()->getSymbolTerm("")->getAllocaInstr();
+                    return new CallInstr(curBasicBlock, manager->getFunction(node->getIdent()->getVal()), values, allocaInstrs, curFunction->genInstrIdx());
                 }
             }
         } else if (node->getUnaryOp() != SyntaxType::NONE) {
             Value* unaryExp = visitUnaryExp(node->getUnaryExp());
             unaryExp->setFuncType(FuncType::INT32);
             switch (node->getUnaryOp()) {
-                case SyntaxType::MINU:
+                case SyntaxType::MINU: {
                     unaryExp = new AluInstr(curBasicBlock == nullptr ? globalBasicBlock : curBasicBlock, CONSTANT_ZERO, unaryExp, node->getUnaryOp(), curFunction->genInstrIdx());
                     break;
+                }
+                case SyntaxType::NOT: {
+                    unaryExp = new IcmpInstr(curBasicBlock == nullptr ? globalBasicBlock : curBasicBlock, CONSTANT_ZERO, unaryExp, SyntaxType::EQL, curFunction->genInstrIdx());
+                    break;
+                }
                 default: break;
             }
             return unaryExp;
@@ -568,7 +577,7 @@ private:
     }
 
     int getDimensionality(ExpNode* node) {
-        AddExpNode* addExp = dynamic_cast<AddExpNode *>(node->getChild());
+        auto* addExp = dynamic_cast<AddExpNode *>(node->getChild());
         if (addExp->getMulExps().size() == 1) {
             MulExpNode* mulExp = dynamic_cast<MulExpNode *>(addExp->getMulExps().front());
             if (mulExp->getUnaryExps().size() == 1) {

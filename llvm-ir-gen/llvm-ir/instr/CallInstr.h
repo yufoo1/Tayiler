@@ -15,7 +15,8 @@ private:
     vector<Use*>* uses = nullptr;
     vector<AllocaInstr*>* allocaInstrs = nullptr;
 public:
-    explicit CallInstr(BasicBlock* parent, Function* function, vector<Value*>* values, vector<AllocaInstr*>* allocaInstrs) {
+    explicit CallInstr(BasicBlock* parent, Function* function, vector<Value*>* values, vector<AllocaInstr*>* allocaInstrs, int idx) {
+        genInstrVirtualReg(idx);
         setFuncType(function->getRetType());
         this->function = function;
         this->uses = new vector<Use*>;
@@ -23,6 +24,7 @@ public:
             this->uses->emplace_back(new Use(i));
         }
         this->allocaInstrs = allocaInstrs;
+
         parent->addInstr(this);
     }
 
@@ -40,21 +42,36 @@ public:
         return str;
     }
 
-    string toMipsString() override {
+    string toMipsString_stack(string ident) override {
         string s;
-        for (int i = 0; i < uses->size(); i++) {
-            if (STACKPOSMAP.count(uses->at(i)->getValue())) {
-                int srcPos = STACKPOSMAP.at(uses->at(i)->getValue());
-                s += "\tlw $t0, " + to_string(srcPos) + "($sp)\n";
+        for (int i = 0; i < uses->size(); ++i) {
+            if (MAINPOSMAPHASPOS(uses->at(i)->getValue()) || POSMAPHASPOS(ident, uses->at(i)->getValue())) {
+                int srcPos = GETPOS(ident, uses->at(i)->getValue());
+                if(POSMAPHASPOS(ident, uses->at(i)->getValue())) {
+                    s += "\tlw $t0, " + to_string(srcPos) + "($t7)\n";
+                } else {
+                    s += "\tlw $t0, " + to_string(srcPos) + "($sp)\n";
+                }
             } else {
                 s += "\tori $t0, $0, " + uses->at(i)->getValue()->getVal() + "\n";
             }
-            int tarPos = STACKPOSMAP[allocaInstrs->at(i)];
-            s += "\tsw $t0, " + to_string(tarPos) + "($sp)\n";
+            int tarPos = GETPOS(function->getIdent(), allocaInstrs->at(i));
+            s += "\tsw $t0, -" + to_string(POSMAP.at(function->getIdent())->size() * 4 + 4 - tarPos) + "($t7)\n";
         }
+        s += "\tsubi $t7, $t7 " + to_string(POSMAP.at(function->getIdent())->size() * 4) + "\n";
+        s += "\tsw $ra, 0($t7)\n";
+        s += "\tsubi $t7, $t7, 4\n";
         s += "\tjal " + function->getEntry()->getLabel() + "\n";
+        s += "\taddi $t7, $t7, 4\n";
+        s += "\tlw $ra, 0($t7)\n";
+        s += "\taddi $t7, $t7 " + to_string(POSMAP.at(function->getIdent())->size() * 4) + "\n";
+        int rdPos = GETPOS(ident, this);
+        if(POSMAPHASPOS(ident, this)) {
+            s += "\tsw $v0, " + to_string(rdPos) + "($t7)\n";
+        } else {
+            s += "\tsw $v0, " + to_string(rdPos) + "($sp)\n";
+        }
         return s;
     }
-
 };
 #endif //TAYILER_CALLINSTR_H

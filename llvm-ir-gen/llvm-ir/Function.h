@@ -11,6 +11,7 @@
 #include "instr/ReturnInstr.h"
 #include "BasicBlock.h"
 #include "../../lexer/SyntaxType.h"
+#include "../symbol/SymbolTable.h"
 
 using namespace std;
 class Param: public Value {
@@ -55,11 +56,12 @@ private:
     list<BasicBlock*> basicBlocks;
     BasicBlock* retBasicBlock = nullptr;
     SymbolTable* symbolTable = nullptr;
+    vector<Value*> vars;
     int localInstrCnt;
 public:
     explicit Function(BasicBlock* entry, SymbolTable* symbolTable, string ident, vector<Param*>* params, Param* retParam, FuncType retType) {
         this->symbolTable = symbolTable;
-        this->ident = move(ident);
+        this->ident = std::move(ident);
         this->params = params;
         this->retParam = retParam;
         this->retType = retType;
@@ -97,6 +99,10 @@ public:
         return entry;
     }
 
+    list<BasicBlock*> getBasicBlocks() {
+        return basicBlocks;
+    }
+
     void addBasicBlock(BasicBlock* basicBlock) {
         basicBlocks.emplace_back(basicBlock);
     }
@@ -130,12 +136,12 @@ public:
         return s;
     }
 
-    string toMipsString() {
+    string toMipsString(string ident) {
         string s;
         for (auto i : basicBlocks) {
             s += i->getLabel() + ":\n";
             for (auto j : i->getInstrs()) {
-                string str = j->toMipsString();
+                string str = j->toMipsString_stack(ident);
                 s += str;
             }
             s += "\tli $v0, 10\n\tsyscall\n";

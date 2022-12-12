@@ -24,12 +24,16 @@ public:
                FuncType2String.at(tarUse->getValue()->getFuncType()) + " " + tarUse->getValue()->getVal() + ")";
     }
 
-    string toMipsString() override {
+    string toMipsString_stack(string ident) override {
         string s;
         s += "\tli $v0, 5\n";
         s += "\tsyscall\n";
-        int tarPos = STACKPOSMAP.at(tarUse->getValue());
-        s += "\tsw $v0, " + to_string(tarPos) + "($sp)\n";
+        int tarPos = GETPOS(ident, tarUse->getValue());
+        if(POSMAPHASPOS(ident, tarUse->getValue())) {
+            s += "\tsw $v0, " + to_string(tarPos) + "($t7)\n";
+        } else {
+            s += "\tsw $v0, " + to_string(tarPos) + "($sp)\n";
+        }
         return s;
     }
 };

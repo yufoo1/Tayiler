@@ -35,6 +35,8 @@ public:
 
     virtual string toMipsString() { return ""; }
 
+    virtual string toMipsString_stack(string ident) { return ""; }
+
     virtual bool isInstr() { return false; };
 
 };

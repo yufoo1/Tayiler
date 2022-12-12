@@ -21,16 +21,24 @@ public:
         return "store " + FuncType2String.at(valUse->getValue()->getFuncType()) + " " + valUse->getValue()->getVal() + ", " + FuncType2String.at(tarUse->getValue()->getFuncType()) + "* " + tarUse->getValue()->getVal();
     }
 
-    string toMipsString() override {
+    string toMipsString_stack(string ident) override {
         string s;
         if (valUse->getValue()->isInstr()) {
-            int valPos = STACKPOSMAP.at(valUse->getValue());
-            s += "\tlw $t0, " + to_string(valPos) + "($sp)\n";
+            int valPos = GETPOS(ident, valUse->getValue());
+            if(POSMAPHASPOS(ident, valUse->getValue())) {
+                s += "\tlw $t0, " + to_string(valPos) + "($t7)\n";
+            } else {
+                s += "\tlw $t0, " + to_string(valPos) + "($sp)\n";
+            }
         } else {
             s += "\tori $t0, $0, " + valUse->getValue()->getVal() + "\n";
         }
-        int tarPos = STACKPOSMAP.at(tarUse->getValue());
-        s += "\tsw $t0, " + to_string(tarPos) + "($sp)\n";
+        int tarPos = GETPOS(ident, tarUse->getValue());
+        if(POSMAPHASPOS(ident, tarUse->getValue())) {
+            s += "\tsw $t0, " + to_string(tarPos) + "($t7)\n";
+        } else {
+            s += "\tsw $t0, " + to_string(tarPos) + "($sp)\n";
+        }
         return s;
     }
 };

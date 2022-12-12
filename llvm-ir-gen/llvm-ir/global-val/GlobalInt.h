@@ -26,7 +26,6 @@ public:
     string toLlvmString() override { return ""; }
 
     string toMipsString() override {
-        ALLOCSTACK(allocaUse->getValue());
         return "";
     }
 };

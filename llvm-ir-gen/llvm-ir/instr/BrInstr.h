@@ -36,13 +36,17 @@ public:
         }
     }
 
-    string toMipsString() override {
+    string toMipsString_stack(string ident) override {
         string s;
         if (useSrc == nullptr) {
             s += "\tb " + trueBasicBlock->getLabel() + "\n";
         } else {
-            int rsPos = STACKPOSMAP.at(useSrc->getValue());
-            s += "\tlw $t0, " + to_string(rsPos) + "($sp)\n";
+            int rsPos = GETPOS(ident, useSrc->getValue());
+            if(POSMAPHASPOS(ident, useSrc->getValue())) {
+                s += "\tlw $t0, " + to_string(rsPos) + "($t7)\n";
+            } else {
+                s += "\tlw $t0, " + to_string(rsPos) + "($sp)\n";
+            }
             s += "\tbeq $t0, 1, " + trueBasicBlock->getLabel() + "\n";
             s += "\tb " + falseBasicBlock->getLabel() + "\n";
         }

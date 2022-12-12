@@ -44,23 +44,39 @@ public:
     }
 
     void dumpMips(ofstream* f) {
+        for(auto i : functions) {
+            GENMAP(i.second->getIdent());
+            for(auto j : i.second->getBasicBlocks()) {
+                for(auto k : j->getInstrs()) {
+                    ALLOCSTACK(i.second->getIdent(), k);
+                }
+            }
+        }
+        for(auto j : globalBasicBlock->getInstrs()) {
+            ALLOCSTACK(mainFunction->getIdent(), j);
+        }
+        for(auto i : mainFunction->getBasicBlocks()) {
+            for(auto j : i->getInstrs()) {
+                ALLOCSTACK(mainFunction->getIdent(), j);
+            }
+        }
         if (!GLOBALSTRINGS.empty()) {
             *f << ".data" << endl;
             for (auto i : GLOBALSTRINGS) *f << "\t" + i->toMipsString() << endl;
         }
-//        if (!GLOBALINTS.empty()) {
-//            for (auto i : GLOBALSTRINGS) *f << "\t" + i->toMipsString() << endl;
-//        }
         *f << ".text" << endl;
         for (auto i : globalBasicBlock->getInstrs()) {
-            *f << i->toMipsString();
+            *f << i->toMipsString_stack("");
         }
-        *f << "\tj " + mainFunction->getEntry()->getLabel() + "\n";
+        *f << "\tj gen_run_time_stack\n";
         for (auto i : functions) {
-            *f << i.second->toMipsString();
+            *f << i.second->toMipsString(i.second->getIdent());
         }
         *f << "\tjr $ra\n";
-        *f << mainFunction->toMipsString();
+        *f << mainFunction->toMipsString(mainFunction->getIdent());
+        *f << "gen_run_time_stack:\n";
+        *f << "\tsubi $t7, $sp, " + to_string(MAINPOSMAP->size() * 4) + "\n"; /* t7 is used as run time stack */
+        *f << "\tj " + mainFunction->getEntry()->getLabel() + "\n";
         f->close();
     }
 

@@ -23,7 +23,7 @@ public:
                FuncType2String.at(use->getValue()->getFuncType()) + "* " + use->getValue()->getVal() + ")";
     }
 
-    string toMipsString() override {
+    string toMipsString_stack(string ident) override {
         return "\tli $v0, 4\n\tsyscall\n";
     }
 };
