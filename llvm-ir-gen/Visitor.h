@@ -33,8 +33,9 @@ private:
     Function* globalFunction = nullptr;
     Function* curFunction = nullptr;
     Loop* curLoop = nullptr;
-    bool inLoop = false;
+    int inLoop = false;
     bool inCond = false;
+    int inBranch = false;
     bool hasReturnInstr = false;
     stack<BasicBlock *> loopHeads;
     stack<BasicBlock *> loopFollows;
@@ -107,7 +108,9 @@ private:
         auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, retParam->getIdent(), retParam->getFuncType(), false, true, curFunction->genInstrIdx());
         curSymbolTable->addSymbolTerm(new SymbolTerm(retParam->getIdent(), retParam->getFuncType(), false, retParam->getDimensionality(), allocInstr));
         visitBlock(node->getBlock());
+        cout << curFunction->getIdent() << endl;
         if(!hasReturnInstr) {
+            cout << "Hello" << endl;
             new ReturnInstr(curBasicBlock, nullptr, false);
         }
         curSymbolTable = curSymbolTable->getParent();
@@ -220,15 +223,21 @@ private:
             Value* cond = visitCond(node->getCond(), thenBlock, elseBlock);
             new BrInstr(curBasicBlock, cond, thenBlock, elseBlock);
             curBasicBlock = thenBlock;
+            ++inBranch;
             visitStmt(node->getStmts().front());
+            --inBranch;
             new BrInstr(curBasicBlock, followBlock);
             curBasicBlock = elseBlock;
+            ++inBranch;
             visitStmt(node->getStmts().back());
+            --inBranch;
         } else {
             Value* cond = visitCond(node->getCond(), thenBlock, followBlock);
             new BrInstr(curBasicBlock, cond, thenBlock, followBlock);
             curBasicBlock = thenBlock;
+            ++inBranch;
             visitStmt(node->getStmts().front());
+            --inBranch;
         }
         new BrInstr(curBasicBlock, followBlock);
         curBasicBlock = followBlock;
@@ -330,6 +339,10 @@ private:
     void visitPrintfStmt(StmtNode* node) {
         string formatString = node->getFormatString();
         vector<ExpNode*> exps = node->getExps();
+        vector<Value*> values;
+        for(auto i : exps) {
+            values.emplace_back(visitExp(i));
+        }
         int i = 0, cnt = 0;
         string str;
         while (i < formatString.length()) {
@@ -345,7 +358,7 @@ private:
                 if (formatString.at(i) == '%') {
                     if (formatString.at(++i) == 'd') {
                         if(cnt < exps.size()) {
-                            new PutintInstr(curBasicBlock, visitExp(exps.at(cnt++)));
+                            new PutintInstr(curBasicBlock, values.at(cnt++));
                         }
                     } else {
                         error();
@@ -358,7 +371,9 @@ private:
     }
 
     void visitReturnStmt(StmtNode* node) {
-        hasReturnInstr = true;
+        if(inBranch == 0 && inLoop == 0) {
+            hasReturnInstr = true;
+        }
         new ReturnInstr(curBasicBlock, node->getExps().empty() ? nullptr : visitExp(node->getExps().front()),
                         curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK));
     }
@@ -377,7 +392,6 @@ private:
         curFunction->addBasicBlock(endBasicBlock);
         curLoop->addBasicBlock(endBasicBlock);
         curBasicBlock = condBlock;
-        inLoop = true;
         inCond = true;
         Value* cond = visitCond(node->getCond(), whileBasicBlock, endBasicBlock);
         new BrInstr(curBasicBlock, cond, whileBasicBlock, endBasicBlock);
@@ -385,11 +399,12 @@ private:
         inCond = false;
         loopHeads.push(condBlock);
         loopFollows.push(endBasicBlock);
+        ++inLoop;
         visitStmt(node->getStmts().front());
+        --inLoop;
         loopHeads.pop();
         loopFollows.pop();
         new BrInstr(curBasicBlock, condBlock);
-        inLoop = false;
         curBasicBlock = endBasicBlock;
         curLoop = curLoop->getParent();
     }

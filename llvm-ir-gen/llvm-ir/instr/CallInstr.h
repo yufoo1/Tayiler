@@ -58,13 +58,13 @@ public:
             int tarPos = GETPOS(function->getIdent(), allocaInstrs->at(i));
             s += "\tsw $t0, -" + to_string(POSMAP.at(function->getIdent())->size() * 4 + 4 - tarPos) + "($t7)\n";
         }
-        s += "\tsubi $t7, $t7 " + to_string(POSMAP.at(function->getIdent())->size() * 4) + "\n";
-        s += "\tsw $ra, 0($t7)\n";
         s += "\tsubi $t7, $t7, 4\n";
+        s += "\tsw $ra, 0($t7)\n";
+        s += "\tsubi $t7, $t7 " + to_string(POSMAP.at(function->getIdent())->size() * 4) + "\n";
         s += "\tjal " + function->getEntry()->getLabel() + "\n";
-        s += "\taddi $t7, $t7, 4\n";
-        s += "\tlw $ra, 0($t7)\n";
         s += "\taddi $t7, $t7 " + to_string(POSMAP.at(function->getIdent())->size() * 4) + "\n";
+        s += "\tlw $ra, 0($t7)\n";
+        s += "\taddi $t7, $t7, 4\n";
         int rdPos = GETPOS(ident, this);
         if(POSMAPHASPOS(ident, this)) {
             s += "\tsw $v0, " + to_string(rdPos) + "($t7)\n";
