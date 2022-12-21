@@ -48,16 +48,16 @@ public:
             GENMAP(i.second->getIdent());
             for(auto j : i.second->getBasicBlocks()) {
                 for(auto k : j->getInstrs()) {
-                    ALLOCSTACK(i.second->getIdent(), k);
+                    ALLOCSTACK(i.second->getIdent(), k, k->getSize());
                 }
             }
         }
         for(auto j : globalBasicBlock->getInstrs()) {
-            ALLOCSTACK(mainFunction->getIdent(), j);
+            ALLOCSTACK(mainFunction->getIdent(), j, j->getSize());
         }
         for(auto i : mainFunction->getBasicBlocks()) {
             for(auto j : i->getInstrs()) {
-                ALLOCSTACK(mainFunction->getIdent(), j);
+                ALLOCSTACK(mainFunction->getIdent(), j, j->getSize());
             }
         }
         if (!GLOBALSTRINGS.empty()) {

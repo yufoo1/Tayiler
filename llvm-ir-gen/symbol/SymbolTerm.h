@@ -5,8 +5,6 @@
 #ifndef TAYILER_SYMBOLTERM_H
 #define TAYILER_SYMBOLTERM_H
 
-//#include "../llvm-ir/instr/AllocaInstr.h"
-
 #include "../llvm-ir/instr/Instr.h"
 
 class SymbolTerm {
@@ -16,6 +14,7 @@ private:
     bool isConstant = false;
     Instr* allocaInstr = nullptr;
     int dimensionality;
+    Value* initVal = nullptr;
 
 public:
     SymbolTerm(string ident, FuncType type, bool isConstant, int dimensionality, Instr* allocaInstr) {

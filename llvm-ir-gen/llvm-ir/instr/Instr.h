@@ -12,11 +12,13 @@ static string LOCAL_NAME_PREFIX = "v";
 static map<string, map<Value*, int>*> POSMAP;
 static map<Value*, int>* MAINPOSMAP = new map<Value*, int>;
 
-static void ALLOCSTACK(const string& label, Value* value) {
-    if(label.empty() || label == "main") {
-        MAINPOSMAP->insert({value, MAINPOSMAP->size() * (-4)});
-    } else {
-        POSMAP.at(label)->insert({value, POSMAP.at(label)->size() * 4});
+static void ALLOCSTACK(const string& label, Value* value, int size) {
+    if(size != 0) {
+        if(label.empty() || label == "main") {
+            MAINPOSMAP->insert({value, MAINPOSMAP->size() * (-1 * size)});
+        } else {
+            POSMAP.at(label)->insert({value, POSMAP.at(label)->size() * size});
+        }
     }
 }
 
@@ -25,12 +27,12 @@ static void GENMAP(const string& ident) {
 }
 
 static int GETPOS(const string& ident, Value* value) {
-    if(POSMAP.count(ident) && POSMAP.at(ident)->count(value)) {
+    if( POSMAP.count(ident) && POSMAP.at(ident)->count(value)) {
         return POSMAP.at(ident)->at(value);
-    } else {
+    } else if(MAINPOSMAP->count(value)) {
         return MAINPOSMAP->at(value);
     }
-    return POSMAP.count(ident) && POSMAP.at(ident)->count(value) ? POSMAP.at(ident)->at(value) : MAINPOSMAP->at(value);
+    return 0;
 }
 
 static bool MAINPOSMAPHASPOS(Value* value) {
@@ -42,6 +44,8 @@ static bool POSMAPHASPOS(const string& ident, Value* value) {
 }
 
 class Instr: public Value {
+private:
+    int size = 0;
 public:
     Instr() = default;
 
@@ -59,6 +63,14 @@ protected:
 public:
     bool isInstr() override {
         return true;
+    }
+
+    void setSize(int size) {
+        this->size = size;
+    }
+
+    int getSize() {
+        return size;
     }
 };
 

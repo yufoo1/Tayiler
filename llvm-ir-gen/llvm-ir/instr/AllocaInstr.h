@@ -15,6 +15,7 @@ private:
     string ident;
     bool isParam; /* when is param, no need to output this alloca instr. */
     SymbolTable* table;
+    vector<int> nums;
 public:
     explicit AllocaInstr(BasicBlock* parent, SymbolTable* table, string ident, FuncType type, bool isConstant, bool isParam, int idx) {
         genInstrVirtualReg(idx);
@@ -22,6 +23,20 @@ public:
         this->table = table;
         this->isParam = isParam;
         this->ident = std::move(ident);
+        setSize(4);
+        if (parent != nullptr) parent->addInstr(this);
+    }
+
+    explicit AllocaInstr(BasicBlock* parent, SymbolTable* table, string ident, FuncType type, bool isConstant, bool isParam, int idx, const vector<int>& nums) {
+        genInstrVirtualReg(idx);
+        setFuncType(type);
+        this->table = table;
+        this->isParam = isParam;
+        this->ident = std::move(ident);
+        int size = 4;
+        for(auto i : nums) size *= i;
+        setSize(size);
+        this->nums = nums;
         if (parent != nullptr) parent->addInstr(this);
     }
 
@@ -36,16 +51,26 @@ public:
             if(table->getSymbolTerm(ident)->getDimensionality() == 0) {
                 return getVal() + " = alloca " + FuncType2String.at(getFuncType());
             } else {
-//                string s
-//                for(int i = 0; i < table->getSymbolTerm(ident)->getDimensionality(); ++i) {
-//                    s += [ x
-//                }
+                string s;
+                s += getVal() +" = alloca ";
+                for(int i = 0; i < table->getSymbolTerm(ident)->getDimensionality(); ++i) {
+                    s += "[" + to_string(nums.at(i)) + " x ";
+                }
+                s += FuncType2String.at(getFuncType());
+                for(int i = 0; i < table->getSymbolTerm(ident)->getDimensionality(); ++i) {
+                    s += "]";
+                }
+                return s;
             }
         }
     }
 
     string toMipsString_stack(string ident) override {
         return "";
+    }
+
+    vector<int> getNums() {
+        return nums;
     }
 };
 #endif //TAYILER_ALLOCAINSTR_H

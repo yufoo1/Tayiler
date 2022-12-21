@@ -16,6 +16,9 @@ private:
     vector<AllocaInstr*>* allocaInstrs = nullptr;
 public:
     explicit CallInstr(BasicBlock* parent, Function* function, vector<Value*>* values, vector<AllocaInstr*>* allocaInstrs, int idx) {
+        if(function->getRetType() != FuncType::VOID) {
+            setSize(4);
+        }
         genInstrVirtualReg(idx);
         setFuncType(function->getRetType());
         this->function = function;
@@ -65,11 +68,13 @@ public:
         s += "\taddi $t7, $t7 " + to_string(POSMAP.at(function->getIdent())->size() * 4) + "\n";
         s += "\tlw $ra, 0($t7)\n";
         s += "\taddi $t7, $t7, 4\n";
-        int rdPos = GETPOS(ident, this);
-        if(POSMAPHASPOS(ident, this)) {
-            s += "\tsw $v0, " + to_string(rdPos) + "($t7)\n";
-        } else {
-            s += "\tsw $v0, " + to_string(rdPos) + "($sp)\n";
+        if(function->getRetType() != FuncType::VOID) {
+            int rdPos = GETPOS(ident, this);
+            if(POSMAPHASPOS(ident, this)) {
+                s += "\tsw $v0, " + to_string(rdPos) + "($t7)\n";
+            } else {
+                s += "\tsw $v0, " + to_string(rdPos) + "($sp)\n";
+            }
         }
         return s;
     }
