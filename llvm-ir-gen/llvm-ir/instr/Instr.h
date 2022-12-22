@@ -10,20 +10,25 @@
 static string LOCAL_PREFIX = "%";
 static string LOCAL_NAME_PREFIX = "v";
 static map<string, map<Value*, int>*> POSMAP;
+static map<string, int> POSMAPSIZE;
 static map<Value*, int>* MAINPOSMAP = new map<Value*, int>;
+static int MAINPOSMAPSIZE = 0;
 
 static void ALLOCSTACK(const string& label, Value* value, int size) {
     if(size != 0) {
         if(label.empty() || label == "main") {
-            MAINPOSMAP->insert({value, MAINPOSMAP->size() * (-1 * size)});
+            MAINPOSMAP->insert({value, -1 * MAINPOSMAPSIZE});
+            MAINPOSMAPSIZE += size;
         } else {
-            POSMAP.at(label)->insert({value, POSMAP.at(label)->size() * size});
+            POSMAP.at(label)->insert({value, POSMAPSIZE.at(label)});
+            POSMAPSIZE.at(label) += size;
         }
     }
 }
 
 static void GENMAP(const string& ident) {
     POSMAP.insert({ident, new map<Value *, int>()});
+    POSMAPSIZE.insert({ident, 0});
 }
 
 static int GETPOS(const string& ident, Value* value) {

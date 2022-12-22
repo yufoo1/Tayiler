@@ -345,10 +345,12 @@ private:
     void initVal(Node* curNode) {
         if (get<0>(cursor->getNthNode(0)) == SyntaxType::LBRACE) {
             genNode(curNode, SyntaxType::LBRACE);
-            genNode(curNode, SyntaxType::INITVAL);
-            while (get<0>(cursor->getNthNode(0)) == SyntaxType::COMMA) {
-                genNode(curNode, SyntaxType::COMMA);
+            if(get<0>(cursor->getNthNode(0)) != SyntaxType::RBRACE) {
                 genNode(curNode, SyntaxType::INITVAL);
+                while (get<0>(cursor->getNthNode(0)) == SyntaxType::COMMA) {
+                    genNode(curNode, SyntaxType::COMMA);
+                    genNode(curNode, SyntaxType::INITVAL);
+                }
             }
             genNode(curNode, SyntaxType::RBRACE);
         } else if (ExpFirst.count(get<0>(cursor->getNthNode(0)))) {

@@ -12,7 +12,7 @@
 class GetElementPtrInstr: public Instr {
 private:
     GlobalString* globalString = nullptr;
-    vector<int>* nums = nullptr;
+    vector<int> nums;
     Use* baseUse = nullptr;
     Use* offsetUse = nullptr;
 public:
@@ -23,12 +23,20 @@ public:
         parent->addInstr(this);
     }
 
-    explicit GetElementPtrInstr(BasicBlock* parent, Value* baseValue, Value* offsetValue, vector<int>* nums, int idx) {
+    explicit GetElementPtrInstr(BasicBlock* parent, Value* baseValue, Value* offsetValue, vector<int> nums, int idx) {
         genInstrVirtualReg(idx);
         this->baseUse = new Use(baseValue);
         this->offsetUse = new Use(offsetValue);
         this->setFuncType(FuncType::INT32);
         this->nums = nums;
+        parent->addInstr(this);
+    }
+
+    explicit GetElementPtrInstr(BasicBlock* parent, Value* baseValue, Value* offsetValue, int idx) {
+        genInstrVirtualReg(idx);
+        this->baseUse = new Use(baseValue);
+        this->offsetUse = new Use(offsetValue);
+        this->setFuncType(FuncType::INT32);
         parent->addInstr(this);
     }
 
@@ -39,20 +47,20 @@ public:
         } else {
             string s;
             s += getVal() + " = getelementptr ";
-            if(nums != nullptr) {
-                for(auto i : *nums) {
+            if(!nums.empty()) {
+                for(auto i : nums) {
                     s += "[" + to_string(i) + " x ";
                 }
                 s += FuncType2String.at(getFuncType());
-                for(auto i : *nums) {
+                for(auto i : nums) {
                     s += "]";
                 }
                 s += ", ";
-                for(auto i : *nums) {
+                for(auto i : nums) {
                     s += "[" + to_string(i) + " x ";
                 }
                 s += FuncType2String.at(getFuncType());
-                for(auto i : *nums) {
+                for(auto i : nums) {
                     s += "]";
                 }
                 s += "* " + baseUse->getValue()->getVal() + ", " + FuncType2String.at(getFuncType()) + " 0, " + FuncType2String.at(getFuncType()) + " 0";

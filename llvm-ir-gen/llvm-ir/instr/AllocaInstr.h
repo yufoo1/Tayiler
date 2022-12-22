@@ -27,7 +27,7 @@ public:
         if (parent != nullptr) parent->addInstr(this);
     }
 
-    explicit AllocaInstr(BasicBlock* parent, SymbolTable* table, string ident, FuncType type, bool isConstant, bool isParam, int idx, const vector<int>& nums) {
+    explicit AllocaInstr(BasicBlock* parent, SymbolTable* table, string ident, FuncType type, bool isConstant, bool isParam, int idx, vector<int> nums) {
         genInstrVirtualReg(idx);
         setFuncType(type);
         this->table = table;

@@ -22,6 +22,7 @@ public:
     explicit StoreInstr(BasicBlock* parent, Value* base, Value* offset, Value* val, Value* pos) {
         baseUse = new Use(base);
         offsetUse = new Use(offset);
+        valUse = new Use(val);
         posUse = new Use(pos);
         parent->addInstr(this);
     }
@@ -54,22 +55,28 @@ public:
                 s += "\tsw $t0, " + to_string(tarPos) + "($sp)\n";
             }
         } else {
-//            int offsetPos = GETPOS(ident, offsetUse->getValue());
-//            if(POSMAPHASPOS(ident, offsetUse->getValue())) {
-//                s += "\tlw $t2, " + to_string(offsetPos) + "($t7)\n";
-//            } else {
-//                s += "\tlw $t2, " + to_string(offsetPos) + "($sp)\n";
-//            }
-//            int allocaPos = GETPOS(ident, allocaUse->getValue());
-//            if(POSMAPHASPOS(ident, allocaUse->getValue())) {
-//                s += "\tlw $t1, " + to_string(allocaPos) + "($t7)\n";
-//                s += "\tadd $t1, $t1, $t2\n";
-//                s += "\tsw $t0, $t1($t7)\n";
-//            } else {
-//                s += "\tlw $t1, " + to_string(allocaPos) + "($sp)\n";
-//                s += "\tadd $t1, $t1, $t2\n";
-//                s += "\tsw $t0, $t1($sp)\n";
-//            }
+            int offsetPos = GETPOS(ident, offsetUse->getValue());
+            if(offsetUse->getValue()->isInstr()) {
+                if(POSMAPHASPOS(ident, offsetUse->getValue())) {
+                    s += "\tlw $t2, " + to_string(offsetPos) + "($t7)\n";
+                } else {
+                    s += "\tlw $t2, " + to_string(offsetPos) + "($sp)\n";
+                }
+            } else {
+                s += "\tori $t2, $0, " + offsetUse->getValue()->getVal() + "\n";
+            }
+            s += "\tsll $t2, $t2, 2\n";
+            int basePos = GETPOS(ident, baseUse->getValue());
+            if(POSMAPHASPOS(ident, baseUse->getValue())) {
+                s += "\tlw $t1, " + to_string(basePos) + "($t7)\n";
+                s += "\tadd $t1, $t1, $t2\n";
+                s += "\tadd $t1, $t7, $t1\n";
+                s += "\tsw $t0, 0($t1)\n";
+            } else {
+                s += "\taddi $t1, $sp, " + to_string(basePos) + "\n";
+                s += "\tsub $t1, $t1, $t2\n";
+                s += "\tsw $t0, 0($t1)\n";
+            }
         }
         return s;
     }
