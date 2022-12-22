@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "../node/Node.h"
-#include "../Manager/Manager.h"
+#include "../manager/Manager.h"
 #include "llvm-ir/instr/StoreInstr.h"
 #include "llvm-ir/constant/ConstantInt.h"
 #include "llvm-ir/instr/AllocaInstr.h"
@@ -35,7 +35,7 @@ private:
     Function* globalFunction = nullptr;
     Function* curFunction = nullptr;
     Loop* curLoop = nullptr;
-    Evaluator* evaluator = new Evaluator(curSymbolTable);
+    Evaluator* evaluator = new Evaluator();
     int inLoop = false;
     bool inCond = false;
     int inBranch = false;
@@ -95,7 +95,7 @@ private:
                 params->emplace_back(param);
             }
         }
-        auto retParam = new Param("", SyntaxType2FuncType.at(node->getFuncType()->getTokenType()), -1);
+        auto* retParam = new Param("", SyntaxType2FuncType.at(node->getFuncType()->getTokenType()), -1);
         auto* function = new Function(entry, curSymbolTable, node->getIdent()->getVal(), params, retParam, SyntaxType2FuncType.at(node->getFuncType()->getTokenType()));
         curFunction = function;
         curLoop->setFunction(function);
@@ -195,10 +195,13 @@ private:
         } else if(getSymbolTermIteratively(node->getLVal()->getIdent()->getVal())->getIsConstant()) {
             errorList.emplace_back(node->getLVal()->getIdent()->getLine(), "h");
         } else {
+            inLeft = true;
+            tuple<Value*, Value*, Value*> t = visitLVal(node->getLVal());
+            inLeft = false;
             if(node->getLVal()->getExps().empty()) {
-                new GetintInstr(curBasicBlock, get<0>(visitLVal(node->getLVal())));
+                new StoreInstr(curBasicBlock, get<0>(t), new GetintInstr(curBasicBlock));
             } else {
-
+                new StoreInstr(curBasicBlock, get<1>(t), get<2>(t), new GetintInstr(curBasicBlock), get<0>(t));
             }
         }
     }
@@ -478,11 +481,13 @@ private:
             if(node->getConstExps().empty()) {
                 auto* allocaInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent()->getVal(), type, isConstant, false, curFunction->genInstrIdx());
                 curSymbolTable->addSymbolTerm(new SymbolTerm(node->getIdent()->getVal(), type, isConstant, node->getConstExps().size(), allocaInstr));
-                new StoreInstr(curBasicBlock, allocaInstr, visitConstInitVal(node->getConstInitVal()));
+                auto* constExp = visitConstExp(node->getConstInitVal()->getConstExp());
+                new StoreInstr(curBasicBlock, allocaInstr, constExp);
+                getSymbolTermIteratively(node->getIdent()->getVal())->setConstExp(node->getConstInitVal()->getConstExp());
             } else {
                 vector<int> nums;
                 for(auto i : node->getConstExps()) {
-                    nums.emplace_back(evaluator->evalConstExp(dynamic_cast<ConstExpNode*>(i)));
+                    nums.emplace_back(evaluator->evalConstExp(dynamic_cast<ConstExpNode*>(i), curSymbolTable));
                 }
                 auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent()->getVal(), type, isConstant, false, curFunction->genInstrIdx(), nums);
                 curSymbolTable->addSymbolTerm(new SymbolTerm(node->getIdent()->getVal(), type, isConstant, node->getConstExps().size(), allocInstr));
@@ -524,15 +529,6 @@ private:
         }
     }
 
-    Value* visitConstInitVal(ConstInitValNode* node) {
-        if (node->getConstExp() != nullptr) {
-            return visitConstExp(node->getConstExp());
-        } else {
-            /* TODO {InitVal{...}}*/
-            error(); return nullptr;
-        }
-    }
-
     Value* visitConstExp(ConstExpNode* node) {
         return visitAddExp(dynamic_cast<AddExpNode *>(node->getChild()));
     }
@@ -557,7 +553,7 @@ private:
             } else {
                 vector<int> nums;
                 for(auto i : node->getConstExps()) {
-                    nums.emplace_back(evaluator->evalConstExp(dynamic_cast<ConstExpNode*>(i)));
+                    nums.emplace_back(evaluator->evalConstExp(dynamic_cast<ConstExpNode*>(i), curSymbolTable));
                 }
                 auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent()->getVal(), type, isConstant, false, curFunction->genInstrIdx(), nums);
                 curSymbolTable->addSymbolTerm(new SymbolTerm(node->getIdent()->getVal(), type, isConstant, node->getConstExps().size(), allocInstr));
@@ -734,7 +730,7 @@ private:
     }
 
     void error() {
-        cout << "error!" << endl;
+        cout << "visitor error!" << endl;
     }
 
 public:
@@ -745,6 +741,7 @@ public:
         globalBasicBlock = new BasicBlock();
         globalFunction = new Function(globalBasicBlock, globalSymbolTable, "", nullptr, nullptr, FuncType::VOID);
         manager->setGlobalBasicBlock(globalBasicBlock);
+        curBasicBlock = globalBasicBlock;
         curFunction = globalFunction;
         curSymbolTable = globalSymbolTable;
         visitAst(root);

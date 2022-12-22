@@ -68,9 +68,8 @@ public:
             s += "\tsll $t2, $t2, 2\n";
             int basePos = GETPOS(ident, baseUse->getValue());
             if(POSMAPHASPOS(ident, baseUse->getValue())) {
-                s += "\tlw $t1, " + to_string(basePos) + "($t7)\n";
+                s += "\taddi $t1, $t7, " + to_string(basePos) + "\n";
                 s += "\tadd $t1, $t1, $t2\n";
-                s += "\tadd $t1, $t7, $t1\n";
                 s += "\tsw $t0, 0($t1)\n";
             } else {
                 s += "\taddi $t1, $sp, " + to_string(basePos) + "\n";

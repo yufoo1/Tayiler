@@ -12,12 +12,10 @@ class SymbolTable {
 private:
     SymbolTable* parent = nullptr;
     map<string, SymbolTerm*>* terms = nullptr;
-//    map<string, Instr*>* allocaInstrs = nullptr;
 public:
     explicit SymbolTable(SymbolTable* parent) {
         this->parent = parent;
         this->terms = new map<string, SymbolTerm*>;
-//        this->allocaInstrs = new map<string, Instr*>;
     }
 
     SymbolTable* getParent() {

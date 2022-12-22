@@ -14,7 +14,7 @@ private:
     bool isConstant = false;
     Instr* allocaInstr = nullptr;
     int dimensionality;
-    Value* initVal = nullptr;
+    ConstExpNode* constExp = nullptr;
 
 public:
     SymbolTerm(string ident, FuncType type, bool isConstant, int dimensionality, Instr* allocaInstr) {
@@ -43,6 +43,14 @@ public:
 
     Instr* getAllocaInstr() {
         return allocaInstr;
+    }
+
+    void setConstExp(ConstExpNode* constExp) {
+        this->constExp = constExp;
+    }
+
+    ConstExpNode* getConstExp() {
+        return constExp;
     }
 
 };

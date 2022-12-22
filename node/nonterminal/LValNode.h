@@ -23,7 +23,7 @@ public:
     void insertNode(Node *node) override {
         switch (node->getType()) {
             case SyntaxType::IDENFR: YASSERT(ident == nullptr) ident = node; break;
-            case SyntaxType::EXP: exps.emplace_back(node);
+            case SyntaxType::EXP: exps.emplace_back(node); break;
             default: break;
         }
     }

@@ -660,7 +660,7 @@ private:
     };
 
     void error() {
-        cout << "error!" << "\n";
+        cout << "parser error!" << "\n";
     }
 
 public:

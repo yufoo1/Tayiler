@@ -10,26 +10,23 @@
 #include "../BasicBlock.h"
 
 class GetintInstr: public Instr {
-private:
-    Use* tarUse = nullptr;
 public:
-    explicit GetintInstr(BasicBlock* parent, Value* val) {
-        this->tarUse = new Use(val);
+    explicit GetintInstr(BasicBlock* parent) {
+        setSize(4);
         this->setFuncType(FuncType::INT32);
         parent->addInstr(this);
     }
 
     string toLlvmString() override {
-        return "call " + FuncType2String.at(getFuncType()) + " @getint" + "(" +
-               FuncType2String.at(tarUse->getValue()->getFuncType()) + " " + tarUse->getValue()->getVal() + ")";
+        return "call " + FuncType2String.at(getFuncType()) + " @getint()";
     }
 
     string toMipsString_stack(string ident) override {
         string s;
         s += "\tli $v0, 5\n";
         s += "\tsyscall\n";
-        int tarPos = GETPOS(ident, tarUse->getValue());
-        if(POSMAPHASPOS(ident, tarUse->getValue())) {
+        int tarPos = GETPOS(ident, this);
+        if(POSMAPHASPOS(ident, this)) {
             s += "\tsw $v0, " + to_string(tarPos) + "($t7)\n";
         } else {
             s += "\tsw $v0, " + to_string(tarPos) + "($sp)\n";
