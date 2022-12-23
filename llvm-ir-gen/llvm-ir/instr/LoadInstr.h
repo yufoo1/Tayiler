@@ -17,6 +17,7 @@ public:
         posUse = new Use(pos);
         setFuncType(type);
         genInstrVirtualReg(idx);
+        setFuncType(FuncType::INT32);
         parent->addInstr(this);
     }
 

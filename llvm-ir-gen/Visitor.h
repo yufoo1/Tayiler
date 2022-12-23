@@ -107,7 +107,11 @@ private:
                 if(params->at(i)->getDimensionality() != 0) {
                     allocInstr->setIsGetElementPtrInstr(true);
                 }
-                if(params->at(i)->getDimensionality() == 2) {
+                if(params->at(i)->getDimensionality() == 1) {
+                    vector<int> ns;
+                    ns.emplace_back(0);
+                    allocInstr->setNums(ns);
+                } else if(params->at(i)->getDimensionality() == 2) {
                     vector<int> ns;
                     ns.emplace_back(0);
                     auto* fParam = dynamic_cast<FuncFParamNode*>(node->getFunFParams()->getFuncFParams().at(i));
@@ -219,44 +223,47 @@ private:
         if(!checkSymbolTable(node->getIdent()->getVal())) {
             errorList.emplace_back(node->getIdent()->getLine(), "c"); return nullptr;
         } else {
-            if(node->getExps().empty() && dynamic_cast<AllocaInstr*>(getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr())->getNums().empty()) {
+            vector<int> nums = dynamic_cast<AllocaInstr*>(getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr())->getNums();
+            if(nums.empty()) {
                 return getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr();
             } else {
-                vector<int> nums = dynamic_cast<AllocaInstr*>(getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr())->getNums();
-                Value* ptr = getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr();
-                vector<int> tmp;
-                for(auto i : nums) {
-                    tmp.emplace_back(i);
-                }
-                Value* offset = CONSTANT_ZERO;
-                ptr = new GetElementPtrInstr(curBasicBlock, ptr, offset, tmp, curFunction->genInstrIdx());
-                for(int i = 0; i < (int)node->getExps().size() - 1; ++i) {
-                    tmp.clear();
-                    for(int j = i + 1; j < nums.size(); ++j) {
-                        tmp.emplace_back(nums.at(j));
-                    }
-                    offset = new AluInstr(curBasicBlock,
-                                          new AluInstr(curBasicBlock, offset,
-                                                       visitExp(dynamic_cast<ExpNode*>(node->getExps().at(i))),
-                                                       SyntaxType::PLUS, curFunction->genInstrIdx()),
-                                          new ConstantInt(to_string(nums.at(i + 1))),
-                                          SyntaxType::MULT, curFunction->genInstrIdx());
-                }
-                if(node->getExps().size() != 0 && node->getExps().size() - nums.size() == 0) {
-                    offset = new AluInstr(curBasicBlock, offset, visitExp(dynamic_cast<ExpNode *>(node->getExps().back())), SyntaxType::PLUS, curFunction->genInstrIdx());
-                    if(inLeft) {
-                        return new GetElementPtrInstr(curBasicBlock, ptr, offset, curFunction->genInstrIdx());
+                Value* base = getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr();
+                if(nums.size() == 1) {
+                    if(node->getExps().empty()){
+                        return new GetElementPtrInstr(curBasicBlock, base, CONSTANT_ZERO, curFunction->genInstrIdx());
+                    } else if(node->getExps().size() == 1) {
+                        auto* getElementPtrInstr = new GetElementPtrInstr(curBasicBlock, base, visitExp(
+                                dynamic_cast<ExpNode *>(node->getExps().front())), curFunction->genInstrIdx());
+                        if(inLeft) {
+                            return getElementPtrInstr;
+                        } else {
+                            return new LoadInstr(curBasicBlock, FuncType::INT32, getElementPtrInstr, curFunction->genInstrIdx());
+                        }
                     } else {
-                        ptr = new GetElementPtrInstr(curBasicBlock, ptr, offset, curFunction->genInstrIdx());
-                        return new LoadInstr(curBasicBlock, FuncType::INT32, ptr, curFunction->genInstrIdx());
+//                        assert("error");
                     }
-                } else if(nums.size() == 2 && nums.size() - node->getExps().size() == 1) {
-                    return new GetElementPtrInstr(curBasicBlock, ptr, new ConstantInt(to_string(nums[1])), curFunction->genInstrIdx());
+                } else if(nums.size() == 2) {
+                    if(node->getExps().empty()) {
+                        return new GetElementPtrInstr(curBasicBlock, base, CONSTANT_ZERO, curFunction->genInstrIdx());
+                    } else if(node->getExps().size() == 1) {
+                        return new GetElementPtrInstr(curBasicBlock, base, new ConstantInt(to_string(nums.at(1))), curFunction->genInstrIdx());
+                    } else if(node->getExps().size() == 2) {
+                        auto* offset = new AluInstr(curBasicBlock, visitExp(
+                                dynamic_cast<ExpNode *>(node->getExps().front())), new ConstantInt(to_string(nums[1])), SyntaxType::MULT, curFunction->genInstrIdx());
+                        offset = new AluInstr(curBasicBlock, visitExp(dynamic_cast<ExpNode *>(node->getExps().back())), offset, SyntaxType::PLUS, curFunction->genInstrIdx());
+                        auto* getElementPtrInstr = new GetElementPtrInstr(curBasicBlock, base, offset, curFunction->genInstrIdx());
+                        if(inLeft) {
+                            return getElementPtrInstr;
+                        } else {
+                            return new LoadInstr(curBasicBlock, FuncType::INT32, getElementPtrInstr, curFunction->genInstrIdx());
+                        }
+                    }
                 } else {
-                    return ptr;
+//                    assert("error");
                 }
             }
         }
+        return nullptr;
     }
 
     void visitIfStmt(StmtNode* node) {
