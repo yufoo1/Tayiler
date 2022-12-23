@@ -38,6 +38,7 @@ public:
 
     string toMipsString_stack(string ident) override {
         string s;
+        s += "# >>> br\n";
         if (useSrc == nullptr) {
             s += "\tb " + trueBasicBlock->getLabel() + "\n";
         } else {
@@ -50,6 +51,7 @@ public:
             s += "\tbeq $t0, 1, " + trueBasicBlock->getLabel() + "\n";
             s += "\tb " + falseBasicBlock->getLabel() + "\n";
         }
+        s += "# <<< br\n";
         return s;
     }
 };

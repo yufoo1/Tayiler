@@ -1,3 +1,5 @@
+#include <utility>
+
 //
 // Created by yufoo1 on 2022/10/27.
 //
@@ -8,6 +10,7 @@ class Value {
 private:
     FuncType funcType;
     string val;
+    bool isGetElementPtrInstr = false;
 public:
     explicit Value(FuncType type) {
         this->funcType = type;
@@ -20,7 +23,7 @@ public:
     }
 
     void setVal(string val) {
-        this->val = val;
+        this->val = std::move(val);
     }
 
     void setFuncType(FuncType type) {
@@ -31,6 +34,14 @@ public:
         return funcType;
     }
 
+    bool getIsGetElementPtrInstr() {
+        return isGetElementPtrInstr;
+    }
+
+    void setIsGetElementPtrInstr(bool isGetElementPtrInstr) {
+        this->isGetElementPtrInstr = isGetElementPtrInstr;
+    }
+
     virtual string toLlvmString() { return ""; }
 
     virtual string toMipsString() { return ""; }
@@ -39,5 +50,6 @@ public:
 
     virtual bool isInstr() { return false; };
 
+    virtual bool judgeFrom(string ident) { return false; };
 };
 #endif //TAYILER_VALUE_H

@@ -6,7 +6,6 @@
 #define TAYILER_VISITOR_H
 
 #include <utility>
-
 #include "../node/Node.h"
 #include "../manager/Manager.h"
 #include "llvm-ir/instr/StoreInstr.h"
@@ -100,13 +99,23 @@ private:
         curFunction = function;
         curLoop->setFunction(function);
         manager->addFunction(function);
-        for (auto i : *params) {
-            if(curSymbolTable->getSymbolTerms()->count(i->getIdent())) {
-                errorList.emplace_back(i->getIdentLine(), "b");
+        for (int i = 0; i < params->size(); ++i) {
+            if(curSymbolTable->getSymbolTerms()->count(params->at(i)->getIdent())) {
+                errorList.emplace_back(params->at(i)->getIdentLine(), "b");
             } else {
-                auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, i->getIdent(), i->getFuncType(), false, true, curFunction->genInstrIdx());
-                curSymbolTable->addSymbolTerm(new SymbolTerm(i->getIdent(), i->getFuncType(), false, i->getDimensionality(), allocInstr));
-                i->setVal(allocInstr->getVal());
+                auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, params->at(i)->getIdent(), params->at(i)->getFuncType(), false, true, curFunction->genInstrIdx());
+                if(params->at(i)->getDimensionality() != 0) {
+                    allocInstr->setIsGetElementPtrInstr(true);
+                }
+                if(params->at(i)->getDimensionality() == 2) {
+                    vector<int> ns;
+                    ns.emplace_back(0);
+                    auto* fParam = dynamic_cast<FuncFParamNode*>(node->getFunFParams()->getFuncFParams().at(i));
+                    ns.emplace_back(evaluator->evalConstExp(dynamic_cast<ConstExpNode*>(fParam->getConstExps().front()), curSymbolTable));
+                    allocInstr->setNums(ns);
+                }
+                curSymbolTable->addSymbolTerm(new SymbolTerm(params->at(i)->getIdent(), params->at(i)->getFuncType(), false, params->at(i)->getDimensionality(), allocInstr));
+                params->at(i)->setVal(allocInstr->getVal());
             }
         }
         auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, retParam->getIdent(), retParam->getFuncType(), false, true, curFunction->genInstrIdx());
@@ -196,22 +205,22 @@ private:
             errorList.emplace_back(node->getLVal()->getIdent()->getLine(), "h");
         } else {
             inLeft = true;
-            tuple<Value*, Value*, Value*> t = visitLVal(node->getLVal());
+            Value* lVal = visitLVal(node->getLVal());
             inLeft = false;
             if(node->getLVal()->getExps().empty()) {
-                new StoreInstr(curBasicBlock, get<0>(t), new GetintInstr(curBasicBlock));
+                new StoreInstr(curBasicBlock, lVal, new GetintInstr(curBasicBlock));
             } else {
-                new StoreInstr(curBasicBlock, get<1>(t), get<2>(t), new GetintInstr(curBasicBlock), get<0>(t));
+                new StoreInstr(curBasicBlock, lVal, new GetintInstr(curBasicBlock));
             }
         }
     }
 
-    tuple<Value*, Value*, Value*> visitLVal(LValNode* node) { /* return pos, base, offset */
+    Value* visitLVal(LValNode* node) { /* return pos, base, offset */
         if(!checkSymbolTable(node->getIdent()->getVal())) {
-            errorList.emplace_back(node->getIdent()->getLine(), "c"); return tuple<Value*, Value*, Value*>{nullptr, nullptr, nullptr};
+            errorList.emplace_back(node->getIdent()->getLine(), "c"); return nullptr;
         } else {
-            if(node->getExps().empty()) {
-                return tuple<Value*, Value*, Value*>{getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr(), nullptr, nullptr};
+            if(node->getExps().empty() && dynamic_cast<AllocaInstr*>(getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr())->getNums().empty()) {
+                return getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr();
             } else {
                 vector<int> nums = dynamic_cast<AllocaInstr*>(getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr())->getNums();
                 Value* ptr = getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr();
@@ -219,29 +228,32 @@ private:
                 for(auto i : nums) {
                     tmp.emplace_back(i);
                 }
-                ptr = new GetElementPtrInstr(curBasicBlock, ptr, nullptr, tmp, curFunction->genInstrIdx());
                 Value* offset = CONSTANT_ZERO;
-                YASSERT(node->getExps().size() == nums.size())
-                for(int i = 0; i < node->getExps().size() - 1; ++i) {
+                ptr = new GetElementPtrInstr(curBasicBlock, ptr, offset, tmp, curFunction->genInstrIdx());
+                for(int i = 0; i < (int)node->getExps().size() - 1; ++i) {
                     tmp.clear();
                     for(int j = i + 1; j < nums.size(); ++j) {
                         tmp.emplace_back(nums.at(j));
                     }
                     offset = new AluInstr(curBasicBlock,
-                                         new AluInstr(curBasicBlock, offset,
-                                                      visitExp(dynamic_cast<ExpNode*>(node->getExps().at(i))),
-                                                      SyntaxType::PLUS, curFunction->genInstrIdx()),
-                                         new ConstantInt(to_string(nums.at(i))),
-                                         SyntaxType::MULT, curFunction->genInstrIdx());
-                    ptr = new GetElementPtrInstr(curBasicBlock, ptr, nullptr, tmp, curFunction->genInstrIdx());
+                                          new AluInstr(curBasicBlock, offset,
+                                                       visitExp(dynamic_cast<ExpNode*>(node->getExps().at(i))),
+                                                       SyntaxType::PLUS, curFunction->genInstrIdx()),
+                                          new ConstantInt(to_string(nums.at(i + 1))),
+                                          SyntaxType::MULT, curFunction->genInstrIdx());
                 }
-                offset = new AluInstr(curBasicBlock, offset, visitExp(dynamic_cast<ExpNode *>(node->getExps().back())), SyntaxType::PLUS, curFunction->genInstrIdx());
-                if(inLeft) {
-                    return tuple<Value*, Value*, Value*>{new GetElementPtrInstr(curBasicBlock, ptr, offset, curFunction->genInstrIdx()),
-                                                         getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr(), offset};
+                if(node->getExps().size() != 0 && node->getExps().size() - nums.size() == 0) {
+                    offset = new AluInstr(curBasicBlock, offset, visitExp(dynamic_cast<ExpNode *>(node->getExps().back())), SyntaxType::PLUS, curFunction->genInstrIdx());
+                    if(inLeft) {
+                        return new GetElementPtrInstr(curBasicBlock, ptr, offset, curFunction->genInstrIdx());
+                    } else {
+                        ptr = new GetElementPtrInstr(curBasicBlock, ptr, offset, curFunction->genInstrIdx());
+                        return new LoadInstr(curBasicBlock, FuncType::INT32, ptr, curFunction->genInstrIdx());
+                    }
+                } else if(nums.size() == 2 && nums.size() - node->getExps().size() == 1) {
+                    return new GetElementPtrInstr(curBasicBlock, ptr, new ConstantInt(to_string(nums[1])), curFunction->genInstrIdx());
                 } else {
-                    ptr = new GetElementPtrInstr(curBasicBlock, ptr, offset, curFunction->genInstrIdx());
-                    return tuple<Value*, Value*, Value*>{new LoadInstr(curBasicBlock, FuncType::INT32, getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr(), offset, curFunction->genInstrIdx(), ptr), getSymbolTermIteratively(node->getIdent()->getVal())->getAllocaInstr(), offset};
+                    return ptr;
                 }
             }
         }
@@ -371,14 +383,9 @@ private:
             errorList.emplace_back(node->getLVal()->getIdent()->getLine(), "h");
         } else {
             inLeft = true;
-            tuple<Value*, Value*, Value*> t = visitLVal(node->getLVal());
-            Value* lVal = get<0>(t);
+            auto* lVal = visitLVal(node->getLVal());
             inLeft = false;
-            if(node->getLVal()->getExps().empty()) {
-                new StoreInstr(curBasicBlock, lVal, visitExp(node->getExps().front()));
-            } else {
-                new StoreInstr(curBasicBlock, get<1>(t), get<2>(t), visitExp(node->getExps().front()), get<0>(t));
-            }
+            new StoreInstr(curBasicBlock, lVal, visitExp(node->getExps().front()));
         }
     }
 
@@ -498,13 +505,11 @@ private:
                             auto* offset = new ConstantInt(to_string(i));
                             auto* ptr = new GetElementPtrInstr(curBasicBlock, allocInstr, offset, nums, curFunction->genInstrIdx());
                             if(i < node->getConstInitVal()->getConstInitVals().size() && dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstExp() != nullptr) {
-                                new StoreInstr(curBasicBlock, allocInstr, offset,
-                                               visitConstExp(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstExp()),
-                                               ptr);
+                                new StoreInstr(curBasicBlock, ptr,
+                                               visitConstExp(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstExp()));
                             } else {
-                                new StoreInstr(curBasicBlock, allocInstr, offset,
-                                               CONSTANT_ZERO,
-                                               ptr);
+                                new StoreInstr(curBasicBlock, ptr,
+                                               CONSTANT_ZERO);
                             }
                         }
                     } else if(nums.size() == 2) {
@@ -513,13 +518,10 @@ private:
                                 auto* offset = new ConstantInt(to_string(i * nums.at(1) + j));
                                 auto* ptr = new GetElementPtrInstr(curBasicBlock, allocInstr, offset, nums, curFunction->genInstrIdx());
                                 if(i < node->getConstInitVal()->getConstInitVals().size() && j < dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstInitVals().size() && dynamic_cast<ConstInitValNode*>(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstInitVals().at(j))->getConstExp() != nullptr) {
-                                    new StoreInstr(curBasicBlock, allocInstr, offset,
-                                                   visitConstExp(dynamic_cast<ConstInitValNode*>(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstInitVals().at(j))->getConstExp()),
-                                                   ptr);
+                                    new StoreInstr(curBasicBlock, ptr,
+                                                   visitConstExp(dynamic_cast<ConstInitValNode*>(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstInitVals().at(j))->getConstExp()));
                                 } else {
-                                    new StoreInstr(curBasicBlock, allocInstr, offset,
-                                                   CONSTANT_ZERO,
-                                                   ptr);
+                                    new StoreInstr(curBasicBlock, ptr,CONSTANT_ZERO);
                                 }
                             }
                         }
@@ -564,13 +566,9 @@ private:
                             auto* offset = new ConstantInt(to_string(i));
                             auto* ptr = new GetElementPtrInstr(curBasicBlock, allocInstr, offset, nums, curFunction->genInstrIdx());
                             if(i < node->getInitVal()->getInitVals().size() && dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getExp() != nullptr) {
-                                new StoreInstr(curBasicBlock, allocInstr, offset,
-                                               visitExp(dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getExp()),
-                                               ptr);
+                                new StoreInstr(curBasicBlock, ptr, visitExp(dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getExp()));
                             } else {
-                                new StoreInstr(curBasicBlock, allocInstr, offset,
-                                               CONSTANT_ZERO,
-                                               ptr);
+                                new StoreInstr(curBasicBlock, ptr, CONSTANT_ZERO);
                             }
                         }
                     } else if(nums.size() == 2) {
@@ -579,13 +577,10 @@ private:
                                 auto* offset = new ConstantInt(to_string(i * nums.at(1) + j));
                                 auto* ptr = new GetElementPtrInstr(curBasicBlock, allocInstr, offset, nums, curFunction->genInstrIdx());
                                 if(i < node->getInitVal()->getInitVals().size() && j < dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getInitVals().size() && dynamic_cast<InitValNode*>(dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getInitVals().at(j))->getExp() != nullptr) {
-                                    new StoreInstr(curBasicBlock, allocInstr, offset,
-                                                   visitExp(dynamic_cast<InitValNode*>(dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getInitVals().at(j))->getExp()),
-                                                   ptr);
+                                    new StoreInstr(curBasicBlock, ptr,
+                                                   visitExp(dynamic_cast<InitValNode*>(dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getInitVals().at(j))->getExp()));
                                 } else {
-                                    new StoreInstr(curBasicBlock, allocInstr, offset,
-                                                   CONSTANT_ZERO,
-                                                   ptr);
+                                    new StoreInstr(curBasicBlock, ptr, CONSTANT_ZERO);
                                 }
                             }
                         }
@@ -715,7 +710,7 @@ private:
         if (node->getExp() != nullptr) {
             return visitExp(node->getExp());
         } else if (node->getLVal() != nullptr) {
-            return get<0>(visitLVal(node->getLVal()));
+            return visitLVal(node->getLVal());
         } else if (node->getNumber() != nullptr) {
             return visitNumber(node->getNumber());
         } else {

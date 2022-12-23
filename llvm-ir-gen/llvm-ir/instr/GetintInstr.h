@@ -23,6 +23,7 @@ public:
 
     string toMipsString_stack(string ident) override {
         string s;
+        s += "# >>> getint\n";
         s += "\tli $v0, 5\n";
         s += "\tsyscall\n";
         int tarPos = GETPOS(ident, this);
@@ -31,6 +32,7 @@ public:
         } else {
             s += "\tsw $v0, " + to_string(tarPos) + "($sp)\n";
         }
+        s += "# <<< getint\n";
         return s;
     }
 };

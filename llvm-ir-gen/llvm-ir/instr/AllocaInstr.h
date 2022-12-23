@@ -40,6 +40,12 @@ public:
         if (parent != nullptr) parent->addInstr(this);
     }
 
+    void setNums(vector<int> nums) {
+        for(int & num : nums) {
+            this->nums.emplace_back(num);
+        }
+    }
+
     string getIdent() {
         return ident;
     }

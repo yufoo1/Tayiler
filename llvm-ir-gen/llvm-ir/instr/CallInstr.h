@@ -47,6 +47,7 @@ public:
 
     string toMipsString_stack(string ident) override {
         string s;
+        s += "# >>> call\n";
         for (int i = 0; i < uses->size(); ++i) {
             if (MAINPOSMAPHASPOS(uses->at(i)->getValue()) || POSMAPHASPOS(ident, uses->at(i)->getValue())) {
                 int srcPos = GETPOS(ident, uses->at(i)->getValue());
@@ -76,6 +77,7 @@ public:
                 s += "\tsw $v0, " + to_string(rdPos) + "($sp)\n";
             }
         }
+        s += "# <<< call\n";
         return s;
     }
 };

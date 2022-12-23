@@ -18,6 +18,7 @@ private:
 public:
     explicit GetElementPtrInstr(BasicBlock* parent, GlobalString* globalString, int idx) {
         genInstrVirtualReg(idx);
+        setIsGetElementPtrInstr(true);
         this->setFuncType(FuncType::INT8);
         this->globalString = globalString;
         parent->addInstr(this);
@@ -25,6 +26,8 @@ public:
 
     explicit GetElementPtrInstr(BasicBlock* parent, Value* baseValue, Value* offsetValue, vector<int> nums, int idx) {
         genInstrVirtualReg(idx);
+        setSize(4);
+        setIsGetElementPtrInstr(true);
         this->baseUse = new Use(baseValue);
         this->offsetUse = new Use(offsetValue);
         this->setFuncType(FuncType::INT32);
@@ -34,6 +37,8 @@ public:
 
     explicit GetElementPtrInstr(BasicBlock* parent, Value* baseValue, Value* offsetValue, int idx) {
         genInstrVirtualReg(idx);
+        setSize(4);
+        setIsGetElementPtrInstr(true);
         this->baseUse = new Use(baseValue);
         this->offsetUse = new Use(offsetValue);
         this->setFuncType(FuncType::INT32);
@@ -72,11 +77,61 @@ public:
         }
     }
 
+    bool judgeFrom(string ident) override {
+        if(baseUse->getValue()->getIsGetElementPtrInstr()) {
+            return baseUse->getValue()->judgeFrom(ident);
+        } else {
+            if(POSMAPHASPOS(ident, baseUse->getValue())) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
     string toMipsString_stack(string ident) {
         if(globalString != nullptr) {
             return "\tla $a0, " + globalString->getLabel() + "\n";
         } else {
-            return "";
+            string s;
+            s += "# >>> getElementPtrInstr\n";
+            if (offsetUse->getValue()->isInstr()) {
+                int offsetPos = GETPOS(ident, offsetUse->getValue());
+                if(POSMAPHASPOS(ident, offsetUse->getValue())) {
+                    s += "\tlw $t1, " + to_string(offsetPos) + "($t7)\n";
+                } else {
+                    s += "\tlw $t1, " + to_string(offsetPos) + "($sp)\n";
+                }
+            } else {
+                s += "\tori $t1, $0, " + offsetUse->getValue()->getVal() + "\n";
+            }
+            s += "\tsll $t1, $t1, 2\n";
+            if(POSMAPHASPOS(ident, baseUse->getValue())) {
+                if(baseUse->getValue()->getIsGetElementPtrInstr()) {
+                    s += "\tlw $t0, " + to_string(GETPOS(ident, baseUse->getValue())) + "($t7)\n";
+                } else {
+                    s += "\taddi $t0, $t7, " + to_string(GETPOS(ident, baseUse->getValue())) + "\n";
+                }
+            } else {
+                if(baseUse->getValue()->getIsGetElementPtrInstr()) {
+                    s += "\tlw $t0, " + to_string(GETPOS(ident, baseUse->getValue())) + "($sp)\n";
+                } else {
+                    s += "\taddi $t0, $sp, " + to_string(GETPOS(ident, baseUse->getValue())) + "\n";
+                }
+            }
+            if(judgeFrom(ident)) {
+                s += "\tadd $t0, $t0, $t1\n";
+            } else {
+                s += "\tsub $t0, $t0, $t1\n";
+            }
+            int rdPos = GETPOS(ident, this);
+            if(POSMAPHASPOS(ident, this)) {
+                s += "\tsw $t0, " + to_string(rdPos) + "($t7)\n";
+            } else {
+                s += "\tsw $t0, " + to_string(rdPos) + "($sp)\n";
+            }
+            s += "# <<< getElementPtrInstr\n";
+            return s;
         }
     }
 };

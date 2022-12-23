@@ -44,6 +44,7 @@ public:
 
     string toMipsString_stack(string ident) override {
         string s;
+        s += "# >>> alu\n";
         if (useSrc1->getValue()->isInstr()) {
             int rsPos = GETPOS(ident, useSrc1->getValue());
             if(POSMAPHASPOS(ident, useSrc1->getValue())) {
@@ -96,6 +97,7 @@ public:
         } else {
             s += "\tsw $t0, " + to_string(rdPos) + "($sp)\n";
         }
+        s += "# <<< alu\n";
         return s;
     }
 
