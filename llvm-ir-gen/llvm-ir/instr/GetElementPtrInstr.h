@@ -77,13 +77,15 @@ public:
         }
     }
 
-    bool judgeFrom(string ident) override {
+    bool judgeFromPosMap(string ident) override {
         if(baseUse->getValue()->getIsGetElementPtrInstr()) {
-            return baseUse->getValue()->judgeFrom(ident);
+            return baseUse->getValue()->judgeFromPosMap(ident);
         } else {
             if(POSMAPHASPOS(ident, baseUse->getValue())) {
+                cout << "yes" << endl;
                 return true;
             } else {
+                cout << "no" << endl;
                 return false;
             }
         }
@@ -98,7 +100,7 @@ public:
             if (offsetUse->getValue()->isInstr()) {
                 int offsetPos = GETPOS(ident, offsetUse->getValue());
                 if(POSMAPHASPOS(ident, offsetUse->getValue())) {
-                    s += "\tlw $t1, " + to_string(offsetPos) + "($t7)\n";
+                    s += "\tlw $t1, " + to_string(offsetPos) + "($gp)\n";
                 } else {
                     s += "\tlw $t1, " + to_string(offsetPos) + "($sp)\n";
                 }
@@ -108,9 +110,9 @@ public:
             s += "\tsll $t1, $t1, 2\n";
             if(POSMAPHASPOS(ident, baseUse->getValue())) {
                 if(baseUse->getValue()->getIsGetElementPtrInstr()) {
-                    s += "\tlw $t0, " + to_string(GETPOS(ident, baseUse->getValue())) + "($t7)\n";
+                    s += "\tlw $t0, " + to_string(GETPOS(ident, baseUse->getValue())) + "($gp)\n";
                 } else {
-                    s += "\taddi $t0, $t7, " + to_string(GETPOS(ident, baseUse->getValue())) + "\n";
+                    s += "\taddi $t0, $gp, " + to_string(GETPOS(ident, baseUse->getValue())) + "\n";
                 }
             } else {
                 if(baseUse->getValue()->getIsGetElementPtrInstr()) {
@@ -119,14 +121,14 @@ public:
                     s += "\taddi $t0, $sp, " + to_string(GETPOS(ident, baseUse->getValue())) + "\n";
                 }
             }
-            if(judgeFrom(ident)) {
+            if(judgeFromPosMap(ident)) {
                 s += "\tadd $t0, $t0, $t1\n";
             } else {
                 s += "\tsub $t0, $t0, $t1\n";
             }
             int rdPos = GETPOS(ident, this);
             if(POSMAPHASPOS(ident, this)) {
-                s += "\tsw $t0, " + to_string(rdPos) + "($t7)\n";
+                s += "\tsw $t0, " + to_string(rdPos) + "($gp)\n";
             } else {
                 s += "\tsw $t0, " + to_string(rdPos) + "($sp)\n";
             }

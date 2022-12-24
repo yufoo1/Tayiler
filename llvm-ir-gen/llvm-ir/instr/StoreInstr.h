@@ -27,7 +27,7 @@ public:
         if (valUse->getValue()->isInstr()) {
             int valPos = GETPOS(ident, valUse->getValue());
             if(POSMAPHASPOS(ident, valUse->getValue())) {
-                s += "\tlw $t0, " + to_string(valPos) + "($t7)\n";
+                s += "\tlw $t0, " + to_string(valPos) + "($gp)\n";
             } else {
                 s += "\tlw $t0, " + to_string(valPos) + "($sp)\n";
             }
@@ -39,7 +39,7 @@ public:
             if (tarUse->getValue()->isInstr()) {
                 int posPos = GETPOS(ident, tarUse->getValue());
                 if(POSMAPHASPOS(ident, tarUse->getValue())) {
-                    s += "\tlw $t1, " + to_string(posPos) + "($t7)\n";
+                    s += "\tlw $t1, " + to_string(posPos) + "($gp)\n";
                 } else {
                     s += "\tlw $t1, " + to_string(posPos) + "($sp)\n";
                 }
@@ -49,7 +49,7 @@ public:
             s += "\tsw $t0, 0($t1)\n";
         } else {
             if(POSMAPHASPOS(ident, tarUse->getValue())) {
-                s += "\tsw $t0, " + to_string(tarPos) + "($t7)\n";
+                s += "\tsw $t0, " + to_string(tarPos) + "($gp)\n";
             } else {
                 s += "\tsw $t0, " + to_string(tarPos) + "($sp)\n";
             }

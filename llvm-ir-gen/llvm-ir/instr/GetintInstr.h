@@ -28,7 +28,7 @@ public:
         s += "\tsyscall\n";
         int tarPos = GETPOS(ident, this);
         if(POSMAPHASPOS(ident, this)) {
-            s += "\tsw $v0, " + to_string(tarPos) + "($t7)\n";
+            s += "\tsw $v0, " + to_string(tarPos) + "($gp)\n";
         } else {
             s += "\tsw $v0, " + to_string(tarPos) + "($sp)\n";
         }

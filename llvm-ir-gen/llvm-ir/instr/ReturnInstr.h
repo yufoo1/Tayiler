@@ -33,7 +33,7 @@ public:
                 if (retUse->getValue()->isInstr()) {
                     int retPos = GETPOS(ident, retUse->getValue());
                     if(POSMAPHASPOS(ident, retUse->getValue())) {
-                        s += "\tlw $v0, " + to_string(retPos) + "($t7)\n";
+                        s += "\tlw $v0, " + to_string(retPos) + "($gp)\n";
                     } else {
                         s += "\tlw $v0, " + to_string(retPos) + "($sp)\n";
                     }

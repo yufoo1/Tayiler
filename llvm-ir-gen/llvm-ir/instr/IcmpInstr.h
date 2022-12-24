@@ -50,7 +50,7 @@ public:
         if (useSrc1->getValue()->isInstr()) {
             int rsPos = GETPOS(ident, useSrc1->getValue());
             if(POSMAPHASPOS(ident, useSrc1->getValue())) {
-                s += "\tlw $t0, " + to_string(rsPos) + "($t7)\n";
+                s += "\tlw $t0, " + to_string(rsPos) + "($gp)\n";
             } else {
                 s += "\tlw $t0, " + to_string(rsPos) + "($sp)\n";
             }
@@ -60,7 +60,7 @@ public:
         if (useSrc2->getValue()->isInstr()) {
             int rtPos = GETPOS(ident, useSrc2->getValue());
             if(POSMAPHASPOS(ident, useSrc2->getValue())) {
-                s += "\tlw $t1, " + to_string(rtPos) + "($t7)\n";
+                s += "\tlw $t1, " + to_string(rtPos) + "($gp)\n";
             } else {
                 s += "\tlw $t1, " + to_string(rtPos) + "($sp)\n";
             }
@@ -104,7 +104,7 @@ public:
             }
         }
         if(POSMAPHASPOS(ident, this)) {
-            s += "\tsw $t0, " + to_string(rdPos) + "($t7)\n";
+            s += "\tsw $t0, " + to_string(rdPos) + "($gp)\n";
         } else {
             s += "\tsw $t0, " + to_string(rdPos) + "($sp)\n";
         }

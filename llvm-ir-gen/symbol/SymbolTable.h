@@ -26,20 +26,21 @@ public:
         terms->insert(pair<string, SymbolTerm*>(term->getIdent(), term));
     }
 
-    bool hasSymbolTerm(string ident) {
-        return terms->count(ident);
-    }
-
     SymbolTerm* getSymbolTerm(string ident) {
-        return terms->at(ident);
+        auto* cur = this;
+        while(cur != nullptr) {
+            if(cur->getSymbolTerms()->count(ident)) {
+                return cur->getSymbolTerms()->at(ident);
+            } else {
+                cur = cur->parent;
+                continue;
+            }
+        }
+        return nullptr;
     }
 
     map<string, SymbolTerm*>* getSymbolTerms() {
         return terms;
     }
-
-//    map<string, Instr*>* getAllocaInstrs() {
-//        return allocaInstrs;
-//    }
 };
 #endif //TAYILER_SYMBOLTABLE_H

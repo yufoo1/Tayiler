@@ -52,7 +52,7 @@ public:
             if (MAINPOSMAPHASPOS(uses->at(i)->getValue()) || POSMAPHASPOS(ident, uses->at(i)->getValue())) {
                 int srcPos = GETPOS(ident, uses->at(i)->getValue());
                 if(POSMAPHASPOS(ident, uses->at(i)->getValue())) {
-                    s += "\tlw $t0, " + to_string(srcPos) + "($t7)\n";
+                    s += "\tlw $t0, " + to_string(srcPos) + "($gp)\n";
                 } else {
                     s += "\tlw $t0, " + to_string(srcPos) + "($sp)\n";
                 }
@@ -60,19 +60,19 @@ public:
                 s += "\tori $t0, $0, " + uses->at(i)->getValue()->getVal() + "\n";
             }
             int tarPos = GETPOS(function->getIdent(), allocaInstrs->at(i));
-            s += "\tsw $t0, -" + to_string(POSMAP.at(function->getIdent())->size() * 4 + 4 - tarPos) + "($t7)\n";
+            s += "\tsw $t0, -" + to_string(POSMAPSIZE.at(function->getIdent()) + 4 - tarPos) + "($gp)\n";
         }
-        s += "\tsubi $t7, $t7, 4\n";
-        s += "\tsw $ra, 0($t7)\n";
-        s += "\tsubi $t7, $t7 " + to_string(POSMAP.at(function->getIdent())->size() * 4) + "\n";
+        s += "\tsubi $gp, $gp, 4\n";
+        s += "\tsw $ra, 0($gp)\n";
+        s += "\tsubi $gp, $gp " + to_string(POSMAPSIZE.at(function->getIdent())) + "\n";
         s += "\tjal " + function->getEntry()->getLabel() + "\n";
-        s += "\taddi $t7, $t7 " + to_string(POSMAP.at(function->getIdent())->size() * 4) + "\n";
-        s += "\tlw $ra, 0($t7)\n";
-        s += "\taddi $t7, $t7, 4\n";
+        s += "\taddi $gp, $gp " + to_string(POSMAPSIZE.at(function->getIdent())) + "\n";
+        s += "\tlw $ra, 0($gp)\n";
+        s += "\taddi $gp, $gp, 4\n";
         if(function->getRetType() != FuncType::VOID) {
             int rdPos = GETPOS(ident, this);
             if(POSMAPHASPOS(ident, this)) {
-                s += "\tsw $v0, " + to_string(rdPos) + "($t7)\n";
+                s += "\tsw $v0, " + to_string(rdPos) + "($gp)\n";
             } else {
                 s += "\tsw $v0, " + to_string(rdPos) + "($sp)\n";
             }

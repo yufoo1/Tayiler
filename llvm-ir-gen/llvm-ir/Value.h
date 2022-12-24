@@ -50,6 +50,6 @@ public:
 
     virtual bool isInstr() { return false; };
 
-    virtual bool judgeFrom(string ident) { return false; };
+    virtual bool judgeFromPosMap(string ident) { return false; };
 };
 #endif //TAYILER_VALUE_H

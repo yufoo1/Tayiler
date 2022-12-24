@@ -31,7 +31,7 @@ public:
         if (posUse->getValue()->isInstr()) {
             int posPos = GETPOS(ident, posUse->getValue());
             if(POSMAPHASPOS(ident, posUse->getValue())) {
-                s += "\tlw $t0, " + to_string(posPos) + "($t7)\n";
+                s += "\tlw $t0, " + to_string(posPos) + "($gp)\n";
             } else {
                 s += "\tlw $t0, " + to_string(posPos) + "($sp)\n";
             }
@@ -41,7 +41,7 @@ public:
         s += "\tlw $t0, 0($t0)\n";
         int rdPos = GETPOS(ident, this);
         if(POSMAPHASPOS(ident, this)) {
-            s += "\tsw $t0, " + to_string(rdPos) + "($t7)\n";
+            s += "\tsw $t0, " + to_string(rdPos) + "($gp)\n";
         } else {
             s += "\tsw $t0, " + to_string(rdPos) + "($sp)\n";
         }

@@ -246,7 +246,9 @@ private:
                     if(node->getExps().empty()) {
                         return new GetElementPtrInstr(curBasicBlock, base, CONSTANT_ZERO, curFunction->genInstrIdx());
                     } else if(node->getExps().size() == 1) {
-                        return new GetElementPtrInstr(curBasicBlock, base, new ConstantInt(to_string(nums.at(1))), curFunction->genInstrIdx());
+                        auto* aluInstr = new AluInstr(curBasicBlock, visitExp(
+                                dynamic_cast<ExpNode *>(node->getExps().front())), new ConstantInt(to_string(nums.at(1))), SyntaxType::MULT, curFunction->genInstrIdx());
+                        return new GetElementPtrInstr(curBasicBlock, base, aluInstr, curFunction->genInstrIdx());
                     } else if(node->getExps().size() == 2) {
                         auto* offset = new AluInstr(curBasicBlock, visitExp(
                                 dynamic_cast<ExpNode *>(node->getExps().front())), new ConstantInt(to_string(nums[1])), SyntaxType::MULT, curFunction->genInstrIdx());
