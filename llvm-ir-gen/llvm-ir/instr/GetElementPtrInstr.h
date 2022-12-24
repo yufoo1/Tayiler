@@ -77,20 +77,6 @@ public:
         }
     }
 
-    bool judgeFromPosMap(string ident) override {
-        if(baseUse->getValue()->getIsGetElementPtrInstr()) {
-            return baseUse->getValue()->judgeFromPosMap(ident);
-        } else {
-            if(POSMAPHASPOS(ident, baseUse->getValue())) {
-                cout << "yes" << endl;
-                return true;
-            } else {
-                cout << "no" << endl;
-                return false;
-            }
-        }
-    }
-
     string toMipsString_stack(string ident) {
         if(globalString != nullptr) {
             return "\tla $a0, " + globalString->getLabel() + "\n";
@@ -121,11 +107,7 @@ public:
                     s += "\taddi $t0, $sp, " + to_string(GETPOS(ident, baseUse->getValue())) + "\n";
                 }
             }
-            if(judgeFromPosMap(ident)) {
-                s += "\tadd $t0, $t0, $t1\n";
-            } else {
-                s += "\tsub $t0, $t0, $t1\n";
-            }
+            s += "\tadd $t0, $t0, $t1\n";
             int rdPos = GETPOS(ident, this);
             if(POSMAPHASPOS(ident, this)) {
                 s += "\tsw $t0, " + to_string(rdPos) + "($t7)\n";

@@ -17,7 +17,7 @@ static int MAINPOSMAPSIZE = 0;
 static void ALLOCSTACK(const string& label, Value* value, int size) {
     if(size != 0) {
         if(label.empty() || label == "main") {
-            MAINPOSMAP->insert({value, -1 * MAINPOSMAPSIZE});
+            MAINPOSMAP->insert({value, MAINPOSMAPSIZE});
             MAINPOSMAPSIZE += size;
         } else {
             POSMAP.at(label)->insert({value, POSMAPSIZE.at(label)});

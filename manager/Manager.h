@@ -65,18 +65,21 @@ public:
             for (auto i : GLOBALSTRINGS) *f << "\t" + i->toMipsString() << endl;
         }
         *f << ".text" << endl;
+        *f << "\tj gen_stack\n";
+        *f << globalBasicBlock->getLabel() + ":";
         for (auto i : globalBasicBlock->getInstrs()) {
             *f << i->toMipsString_stack("");
         }
-        *f << "\tj gen_run_time_stack\n";
+        *f << "\tj " + mainFunction->getEntry()->getLabel() + "\n";
         for (auto i : functions) {
             *f << i.second->toMipsString(i.second->getIdent());
         }
         *f << "\tjr $ra\n";
         *f << mainFunction->toMipsString(mainFunction->getIdent());
-        *f << "gen_run_time_stack:\n";
+        *f << "gen_stack:\n";
+        *f << "\tsubi $sp, $sp, " + to_string(MAINPOSMAPSIZE) + "\n";
         *f << "\tsubi $t7, $sp, " + to_string(MAINPOSMAPSIZE) + "\n"; /* t7 is used as run time stack */
-        *f << "\tj " + mainFunction->getEntry()->getLabel() + "\n";
+        *f << "\tj " + globalBasicBlock->getLabel() + "\n";
         f->close();
     }
 
