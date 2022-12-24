@@ -26,7 +26,7 @@ public:
     string toMipsString_stack(string ident) override {
         int pos = GETPOS(ident, use->getValue());
         if(POSMAPHASPOS(ident, use->getValue())) {
-            return "\tlw $a0, " + to_string(pos) + "($gp)\n\tli $v0, 1\n\tsyscall\n";
+            return "\tlw $a0, " + to_string(pos) + "($t7)\n\tli $v0, 1\n\tsyscall\n";
         } else {
             return "\tlw $a0, " + to_string(pos) + "($sp)\n\tli $v0, 1\n\tsyscall\n";
         }

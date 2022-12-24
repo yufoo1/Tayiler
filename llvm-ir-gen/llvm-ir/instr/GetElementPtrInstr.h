@@ -100,7 +100,7 @@ public:
             if (offsetUse->getValue()->isInstr()) {
                 int offsetPos = GETPOS(ident, offsetUse->getValue());
                 if(POSMAPHASPOS(ident, offsetUse->getValue())) {
-                    s += "\tlw $t1, " + to_string(offsetPos) + "($gp)\n";
+                    s += "\tlw $t1, " + to_string(offsetPos) + "($t7)\n";
                 } else {
                     s += "\tlw $t1, " + to_string(offsetPos) + "($sp)\n";
                 }
@@ -110,9 +110,9 @@ public:
             s += "\tsll $t1, $t1, 2\n";
             if(POSMAPHASPOS(ident, baseUse->getValue())) {
                 if(baseUse->getValue()->getIsGetElementPtrInstr()) {
-                    s += "\tlw $t0, " + to_string(GETPOS(ident, baseUse->getValue())) + "($gp)\n";
+                    s += "\tlw $t0, " + to_string(GETPOS(ident, baseUse->getValue())) + "($t7)\n";
                 } else {
-                    s += "\taddi $t0, $gp, " + to_string(GETPOS(ident, baseUse->getValue())) + "\n";
+                    s += "\taddi $t0, $t7, " + to_string(GETPOS(ident, baseUse->getValue())) + "\n";
                 }
             } else {
                 if(baseUse->getValue()->getIsGetElementPtrInstr()) {
@@ -128,7 +128,7 @@ public:
             }
             int rdPos = GETPOS(ident, this);
             if(POSMAPHASPOS(ident, this)) {
-                s += "\tsw $t0, " + to_string(rdPos) + "($gp)\n";
+                s += "\tsw $t0, " + to_string(rdPos) + "($t7)\n";
             } else {
                 s += "\tsw $t0, " + to_string(rdPos) + "($sp)\n";
             }

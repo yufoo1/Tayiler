@@ -44,7 +44,7 @@ public:
         } else {
             int rsPos = GETPOS(ident, useSrc->getValue());
             if(POSMAPHASPOS(ident, useSrc->getValue())) {
-                s += "\tlw $t0, " + to_string(rsPos) + "($gp)\n";
+                s += "\tlw $t0, " + to_string(rsPos) + "($t7)\n";
             } else {
                 s += "\tlw $t0, " + to_string(rsPos) + "($sp)\n";
             }

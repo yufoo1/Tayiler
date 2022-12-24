@@ -75,7 +75,7 @@ public:
         *f << "\tjr $ra\n";
         *f << mainFunction->toMipsString(mainFunction->getIdent());
         *f << "gen_run_time_stack:\n";
-        *f << "\tsubi $gp, $sp, " + to_string(MAINPOSMAPSIZE) + "\n"; /* gp is used as run time stack */
+        *f << "\tsubi $t7, $sp, " + to_string(MAINPOSMAPSIZE) + "\n"; /* t7 is used as run time stack */
         *f << "\tj " + mainFunction->getEntry()->getLabel() + "\n";
         f->close();
     }
