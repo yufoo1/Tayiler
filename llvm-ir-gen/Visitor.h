@@ -328,7 +328,7 @@ private:
             }
             new BrInstr(curBasicBlock, first, trueBasicBlock, nextBlock);
             curBasicBlock = nextBlock;
-            if(i + 1 < node->getLAndExps().size() - 1) {
+            if(i < node->getLAndExps().size() - 1) {
                 flag = true;
                 falseBasicBlock = new BasicBlock();
                 curFunction->addBasicBlock(falseBasicBlock);
