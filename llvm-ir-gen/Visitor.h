@@ -520,6 +520,7 @@ private:
                                 new StoreInstr(curBasicBlock, ptr,
                                                CONSTANT_ZERO);
                             }
+                            getSymbolTermIteratively(node->getIdent()->getVal())->addConstExpArr(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstExp());
                         }
                     } else if(nums.size() == 2) {
                         for(int i = 0; i < nums.at(0); ++i) {
@@ -532,6 +533,7 @@ private:
                                 } else {
                                     new StoreInstr(curBasicBlock, ptr,CONSTANT_ZERO);
                                 }
+                                getSymbolTermIteratively(node->getIdent()->getVal())->addConstExpArr(dynamic_cast<ConstInitValNode*>(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstInitVals().at(j))->getConstExp());
                             }
                         }
                     }

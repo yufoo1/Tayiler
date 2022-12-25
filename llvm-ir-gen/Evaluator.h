@@ -82,7 +82,28 @@ private:
     }
 
     int evalLVal(LValNode* node, SymbolTable* curSymbolTable) {
-        return evalConstExp(dynamic_cast<ConstExpNode*>(curSymbolTable->getSymbolTerm(node->getIdent()->getVal())->getConstExp()), curSymbolTable);
+        if(!node->getExps().empty()) {
+            if(node->getExps().size() == 1) {
+                int idx = evalExp(dynamic_cast<ExpNode*>(node->getExps().front()), curSymbolTable);
+                return evalConstExp(curSymbolTable->getSymbolTerm(node->getIdent()->getVal())->getConstExpArr().at(
+                        idx), curSymbolTable);
+            } else if(node->getExps().size() == 2) {
+                SymbolTable* cur = curSymbolTable;
+                SymbolTerm* term = nullptr;
+                while(cur != nullptr) {
+                    if(cur->getSymbolTerms()->count(node->getIdent()->getVal())) {
+                        term = cur->getSymbolTerm(node->getIdent()->getVal());
+                    }
+                    cur = cur->getParent();
+                }
+                vector<int> nums = dynamic_cast<AllocaInstr*>(term->getAllocaInstr())->getNums();
+                int idx = evalExp(dynamic_cast<ExpNode*>(node->getExps().front()), curSymbolTable) * nums[1] + evalExp(dynamic_cast<ExpNode*>(node->getExps().back()), curSymbolTable);
+                return evalConstExp(curSymbolTable->getSymbolTerm(node->getIdent()->getVal())->getConstExpArr().at(
+                        idx), curSymbolTable);
+            }
+        } else {
+            return evalConstExp(dynamic_cast<ConstExpNode*>(curSymbolTable->getSymbolTerm(node->getIdent()->getVal())->getConstExp()), curSymbolTable);
+        }
     }
 
     int evalNumber(NumberNode* node, SymbolTable* curSymbolTable) {

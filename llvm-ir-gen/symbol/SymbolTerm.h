@@ -15,6 +15,7 @@ private:
     Instr* allocaInstr = nullptr;
     int dimensionality;
     ConstExpNode* constExp = nullptr;
+    vector<ConstExpNode*> constExpArr;
 
 public:
     SymbolTerm(string ident, FuncType type, bool isConstant, int dimensionality, Instr* allocaInstr) {
@@ -51,6 +52,14 @@ public:
 
     ConstExpNode* getConstExp() {
         return constExp;
+    }
+
+    void addConstExpArr(ConstExpNode* node) {
+        constExpArr.emplace_back(node);
+    }
+
+    vector<ConstExpNode*> getConstExpArr() {
+        return constExpArr;
     }
 
 };
