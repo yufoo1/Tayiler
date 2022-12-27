@@ -38,7 +38,7 @@ private:
     int inLoop = false;
     bool inCond = false;
     int inBranch = false;
-    bool inLeft = false; /* judge need Load Instr or not */
+    stack<bool> inLeft; /* judge need Load Instr or not */
     bool hasReturnInstr = false;
     stack<BasicBlock *> loopHeads;
     stack<BasicBlock *> loopFollows;
@@ -208,9 +208,9 @@ private:
         } else if(getSymbolTermIteratively(node->getLVal()->getIdent()->getVal())->getIsConstant()) {
             errorList.emplace_back(node->getLVal()->getIdent()->getLine(), "h");
         } else {
-            inLeft = true;
-            Value* lVal = visitLVal(node->getLVal());
-            inLeft = false;
+            inLeft.push(true);
+            auto* lVal = visitLVal(node->getLVal());
+            inLeft.pop();
             if(node->getLVal()->getExps().empty()) {
                 new StoreInstr(curBasicBlock, lVal, new GetintInstr(curBasicBlock));
             } else {
@@ -232,9 +232,11 @@ private:
                     if(node->getExps().empty()){
                         return new GetElementPtrInstr(curBasicBlock, base, CONSTANT_ZERO, curFunction->genInstrIdx());
                     } else if(node->getExps().size() == 1) {
-                        auto* getElementPtrInstr = new GetElementPtrInstr(curBasicBlock, base, visitExp(
-                                dynamic_cast<ExpNode *>(node->getExps().front())), curFunction->genInstrIdx());
-                        if(inLeft) {
+                        inLeft.push(false);
+                        auto* exp = visitExp(dynamic_cast<ExpNode *>(node->getExps().front()));
+                        inLeft.pop();
+                        auto* getElementPtrInstr = new GetElementPtrInstr(curBasicBlock, base, exp, curFunction->genInstrIdx());
+                        if(!inLeft.empty() && inLeft.top()) {
                             return getElementPtrInstr;
                         } else {
                             return new LoadInstr(curBasicBlock, FuncType::INT32, getElementPtrInstr, curFunction->genInstrIdx());
@@ -250,11 +252,16 @@ private:
                                 dynamic_cast<ExpNode *>(node->getExps().front())), new ConstantInt(to_string(nums.at(1))), SyntaxType::MULT, curFunction->genInstrIdx());
                         return new GetElementPtrInstr(curBasicBlock, base, aluInstr, curFunction->genInstrIdx());
                     } else if(node->getExps().size() == 2) {
-                        auto* offset = new AluInstr(curBasicBlock, visitExp(
-                                dynamic_cast<ExpNode *>(node->getExps().front())), new ConstantInt(to_string(nums[1])), SyntaxType::MULT, curFunction->genInstrIdx());
-                        offset = new AluInstr(curBasicBlock, visitExp(dynamic_cast<ExpNode *>(node->getExps().back())), offset, SyntaxType::PLUS, curFunction->genInstrIdx());
+                        inLeft.push(false);
+                        auto* exp = visitExp(dynamic_cast<ExpNode *>(node->getExps().front()));
+                        inLeft.pop();
+                        auto* offset = new AluInstr(curBasicBlock, exp, new ConstantInt(to_string(nums[1])), SyntaxType::MULT, curFunction->genInstrIdx());
+                        inLeft.push(false);
+                        exp = visitExp(dynamic_cast<ExpNode *>(node->getExps().back()));
+                        inLeft.pop();
+                        offset = new AluInstr(curBasicBlock, exp, offset, SyntaxType::PLUS, curFunction->genInstrIdx());
                         auto* getElementPtrInstr = new GetElementPtrInstr(curBasicBlock, base, offset, curFunction->genInstrIdx());
-                        if(inLeft) {
+                        if(!inLeft.empty() && inLeft.top()) {
                             return getElementPtrInstr;
                         } else {
                             return new LoadInstr(curBasicBlock, FuncType::INT32, getElementPtrInstr, curFunction->genInstrIdx());
@@ -391,10 +398,13 @@ private:
         } else if(getSymbolTermIteratively(node->getLVal()->getIdent()->getVal())->getIsConstant()) {
             errorList.emplace_back(node->getLVal()->getIdent()->getLine(), "h");
         } else {
-            inLeft = true;
+            inLeft.push(true);
             auto* lVal = visitLVal(node->getLVal());
-            inLeft = false;
-            new StoreInstr(curBasicBlock, lVal, visitExp(node->getExps().front()));
+            inLeft.pop();
+            inLeft.push(false);
+            auto* exp = visitExp(node->getExps().front());
+            inLeft.pop();
+            new StoreInstr(curBasicBlock, lVal, exp);
         }
     }
 
@@ -403,7 +413,9 @@ private:
         vector<ExpNode*> exps = node->getExps();
         vector<Value*> values;
         for(auto i : exps) {
+            inLeft.push(false);
             values.emplace_back(visitExp(i));
+            inLeft.pop();
         }
         int i = 0, cnt = 0;
         string str;
@@ -436,8 +448,15 @@ private:
         if(inBranch == 0 && inLoop == 0) {
             hasReturnInstr = true;
         }
-        new ReturnInstr(curBasicBlock, node->getExps().empty() ? nullptr : visitExp(node->getExps().front()),
-                        curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK));
+        if(node->getExps().empty()) {
+            new ReturnInstr(curBasicBlock, nullptr, curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK));
+        } else {
+            inLeft.push(false);
+            auto* exp = visitExp(node->getExps().front());
+            inLeft.pop();
+            new ReturnInstr(curBasicBlock, exp,
+                            curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK));
+        }
     }
 
     void visitWhileStmt(StmtNode* node) {
@@ -497,7 +516,9 @@ private:
             if(node->getConstExps().empty()) {
                 auto* allocaInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent()->getVal(), type, isConstant, false, curFunction->genInstrIdx());
                 curSymbolTable->addSymbolTerm(new SymbolTerm(node->getIdent()->getVal(), type, isConstant, node->getConstExps().size(), allocaInstr));
+                inLeft.push(false);
                 auto* constExp = visitConstExp(node->getConstInitVal()->getConstExp());
+                inLeft.pop();
                 new StoreInstr(curBasicBlock, allocaInstr, constExp);
                 getSymbolTermIteratively(node->getIdent()->getVal())->setConstExp(node->getConstInitVal()->getConstExp());
             } else {
@@ -514,8 +535,11 @@ private:
                             auto* offset = new ConstantInt(to_string(i));
                             auto* ptr = new GetElementPtrInstr(curBasicBlock, allocInstr, offset, nums, curFunction->genInstrIdx());
                             if(i < node->getConstInitVal()->getConstInitVals().size() && dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstExp() != nullptr) {
+                                inLeft.push(false);
+                                auto* constExp = visitConstExp(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstExp());
+                                inLeft.pop();
                                 new StoreInstr(curBasicBlock, ptr,
-                                               visitConstExp(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstExp()));
+                                               constExp);
                             } else {
                                 new StoreInstr(curBasicBlock, ptr,
                                                CONSTANT_ZERO);
@@ -528,8 +552,11 @@ private:
                                 auto* offset = new ConstantInt(to_string(i * nums.at(1) + j));
                                 auto* ptr = new GetElementPtrInstr(curBasicBlock, allocInstr, offset, nums, curFunction->genInstrIdx());
                                 if(i < node->getConstInitVal()->getConstInitVals().size() && j < dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstInitVals().size() && dynamic_cast<ConstInitValNode*>(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstInitVals().at(j))->getConstExp() != nullptr) {
+                                    inLeft.push(false);
+                                    auto* constExp = visitConstExp(dynamic_cast<ConstInitValNode*>(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstInitVals().at(j))->getConstExp());
+                                    inLeft.pop();
                                     new StoreInstr(curBasicBlock, ptr,
-                                                   visitConstExp(dynamic_cast<ConstInitValNode*>(dynamic_cast<ConstInitValNode*>(node->getConstInitVal()->getConstInitVals().at(i))->getConstInitVals().at(j))->getConstExp()));
+                                                   constExp);
                                 } else {
                                     new StoreInstr(curBasicBlock, ptr,CONSTANT_ZERO);
                                 }
@@ -561,7 +588,10 @@ private:
                 auto* allocInstr = new AllocaInstr(curBasicBlock, curSymbolTable, node->getIdent()->getVal(), type, isConstant, false, curFunction->genInstrIdx());
                 curSymbolTable->addSymbolTerm(new SymbolTerm(node->getIdent()->getVal(), type, isConstant, node->getConstExps().size(), allocInstr));
                 if(node->getInitVal() != nullptr) {
-                    new StoreInstr(curBasicBlock, allocInstr, visitExp(node->getInitVal()->getExp()));
+                    inLeft.push(false);
+                    auto* exp = visitExp(node->getInitVal()->getExp());
+                    inLeft.pop();
+                    new StoreInstr(curBasicBlock, allocInstr, exp);
                 }
             } else {
                 vector<int> nums;
@@ -577,7 +607,10 @@ private:
                             auto* offset = new ConstantInt(to_string(i));
                             auto* ptr = new GetElementPtrInstr(curBasicBlock, allocInstr, offset, nums, curFunction->genInstrIdx());
                             if(i < node->getInitVal()->getInitVals().size() && dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getExp() != nullptr) {
-                                new StoreInstr(curBasicBlock, ptr, visitExp(dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getExp()));
+                                inLeft.push(false);
+                                auto* exp = visitExp(dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getExp());
+                                inLeft.pop();
+                                new StoreInstr(curBasicBlock, ptr, exp);
                             } else {
                                 new StoreInstr(curBasicBlock, ptr, CONSTANT_ZERO);
                             }
@@ -588,8 +621,11 @@ private:
                                 auto* offset = new ConstantInt(to_string(i * nums.at(1) + j));
                                 auto* ptr = new GetElementPtrInstr(curBasicBlock, allocInstr, offset, nums, curFunction->genInstrIdx());
                                 if(i < node->getInitVal()->getInitVals().size() && j < dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getInitVals().size() && dynamic_cast<InitValNode*>(dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getInitVals().at(j))->getExp() != nullptr) {
+                                    inLeft.push(false);
+                                    auto* exp = visitExp(dynamic_cast<InitValNode*>(dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getInitVals().at(j))->getExp());
+                                    inLeft.pop();
                                     new StoreInstr(curBasicBlock, ptr,
-                                                   visitExp(dynamic_cast<InitValNode*>(dynamic_cast<InitValNode*>(node->getInitVal()->getInitVals().at(i))->getInitVals().at(j))->getExp()));
+                                                   exp);
                                 } else {
                                     new StoreInstr(curBasicBlock, ptr, CONSTANT_ZERO);
                                 }
@@ -649,7 +685,9 @@ private:
                     if (node->getFuncRParams() != nullptr) {
                         vector<Node*> exps = node->getFuncRParams()->getExps();
                         for(int i = 0; i < exps.size(); ++i) {
+                            inLeft.push(false);
                             Value* exp = visitExp(dynamic_cast<ExpNode *>(exps.at(i)));
+                            inLeft.pop();
                             if(exp != nullptr) {
                                 if(exp->getFuncType() != manager->getFunction(node->getIdent()->getVal())->getParams()->at(i)->getFuncType() || getDimensionality(dynamic_cast<ExpNode *>(exps.at(i))) != manager->getFunction(node->getIdent()->getVal())->getParams()->at(i)->getDimensionality()) {
                                     errorList.emplace_back(node->getIdent()->getLine(), "e");
