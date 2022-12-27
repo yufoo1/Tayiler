@@ -67,7 +67,7 @@ public:
         }
         switch (op) {
             case SyntaxType::PLUS: {
-                s += "\tadd $t0, $t0, $t1\n";
+                s += "\taddu $t0, $t0, $t1\n";
                 break;
             }
             case SyntaxType::MINU: {
