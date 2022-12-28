@@ -13,7 +13,7 @@ enum class SyntaxType {
     IDENFR, INTCON, STRCON,
     MAINTK, INTTK, VOIDTK, CONSTTK, BREAKTK, CONTINUETK, IFTK, ELSETK, WHILETK, RETURNTK,  GETINTTK, PRINTFTK,
     NOT, AND, OR, PLUS, MINU, MULT, DIV, MOD, LSS, LEQ, GRE, GEQ, EQL, NEQ, ASSIGN,
-    SEMICN, COMMA, LPARENT, RPARENT, LBRACK, RBRACK, LBRACE, RBRACE,
+    SEMICN, COMMA, LPARENT, RPARENT, LBRACK, RBRACK, LBRACE, RBRACE, FORTK,
 
     ADDCONSTEXP, ADDEXP, BLOCKITEM, BLOCK, BTYPE, COMPUNIT, COND, CONSTDECL, CONSTDEF, CONSTEXP, CONSTINITVAL, DECL,
     EQEXP, EXP, FUNCDEF, FUNCFPARAM, FUNCFPARAMS, FUNCRPARAMS, FUNCTYPE, INITVAL, INTCONST,
@@ -21,7 +21,7 @@ enum class SyntaxType {
 };
 
 enum class StmtType {
-    NONE, BLOCK, BREAK, CONTINUE, EXP, GETINT, IF, LVALASSIGN, PRINTF, RETURN, WHILE, SEMICN
+    NONE, BLOCK, BREAK, CONTINUE, EXP, GETINT, IF, LVALASSIGN, PRINTF, RETURN, WHILE, SEMICN, FOR
 };
 
 enum class FuncType {
@@ -49,6 +49,7 @@ std::map<std::string, SyntaxType> ReservedWordMap = {
         {"if", SyntaxType::IFTK},
         {"else", SyntaxType::ELSETK},
         {"while", SyntaxType::WHILETK},
+        {"for", SyntaxType::FORTK},
         {"getint", SyntaxType::GETINTTK},
         {"printf", SyntaxType::PRINTFTK},
         {"return", SyntaxType::RETURNTK},
@@ -64,6 +65,7 @@ std::map<SyntaxType, std::string> ReservedWordMapReversed = {
         {SyntaxType::IFTK, "if"},
         {SyntaxType::ELSETK, "else"},
         {SyntaxType::WHILETK, "while"},
+        {SyntaxType::FORTK, "for"},
         {SyntaxType::GETINTTK, "getint"},
         {SyntaxType::PRINTFTK, "printf"},
         {SyntaxType::RETURNTK, "return"},
@@ -110,6 +112,7 @@ std::map<SyntaxType, std::string> SyntaxType2String = {
         {SyntaxType::IFTK, "IFTK"},
         {SyntaxType::ELSETK, "ELSETK"},
         {SyntaxType::WHILETK, "WHILETK"},
+        {SyntaxType::FORTK, "FORTK"},
         {SyntaxType::RETURNTK, "RETURNTK"},
         {SyntaxType::GETINTTK, "GETINTTK"},
         {SyntaxType::PRINTFTK, "PRINTFTK"},

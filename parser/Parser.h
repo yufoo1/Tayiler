@@ -11,6 +11,7 @@
 #include "iostream"
 #include "ParseCursor.h"
 #include "SyntaxTree.h"
+#include "../node/terminal/ForNode.h"
 
 using namespace std;
 class Parser {
@@ -128,6 +129,20 @@ private:
                 genNode(curNode, SyntaxType::WHILETK);
                 genNode(curNode, SyntaxType::LPARENT);
                 genNode(curNode, SyntaxType::COND);
+                genNode(curNode, SyntaxType::RPARENT);
+                ++loopDepth;
+                genNode(curNode, SyntaxType::STMT);
+                --loopDepth;
+                break;
+            }
+            case SyntaxType::FORTK: {
+                genNode(curNode, SyntaxType::FORTK);
+                genNode(curNode, SyntaxType::LPARENT);
+                genNode(curNode, SyntaxType::STMT);
+                genNode(curNode, SyntaxType::SEMICN);
+                genNode(curNode, SyntaxType::COND);
+                genNode(curNode, SyntaxType::SEMICN);
+                genNode(curNode, SyntaxType::STMT);
                 genNode(curNode, SyntaxType::RPARENT);
                 ++loopDepth;
                 genNode(curNode, SyntaxType::STMT);
@@ -639,6 +654,7 @@ private:
             }
             case SyntaxType::VOIDTK: node = new VoidNode, cursor->next(); break;
             case SyntaxType::WHILETK: node = new WhileNode, cursor->next(); break;
+            case SyntaxType::FORTK: node = new ForNode, cursor->next(); break;
 
             case SyntaxType::IDENFR: node = new IdentNode(get<1>(cursor->getNthNode(0))), node->setLine(get<2>(cursor->getNthNode(0))), ident(node), curNode->insertNode(node), cursor->next(); return;
             case SyntaxType::STRCON: node = new StrConNode(get<1>(cursor->getNthNode(0))), formatString(node), curNode->insertNode(node), cursor->next(); return;
@@ -651,7 +667,7 @@ private:
 
     set<SyntaxType> StmtFirst = {
             SyntaxType::IDENFR, SyntaxType::SEMICN, SyntaxType::LBRACE, SyntaxType::IFTK, SyntaxType::WHILETK, SyntaxType::CONTINUETK,
-            SyntaxType::BREAKTK, SyntaxType::RETURNTK, SyntaxType::PRINTFTK, SyntaxType::LPARENT, SyntaxType::PLUS,
+            SyntaxType::BREAKTK, SyntaxType::RETURNTK, SyntaxType::PRINTFTK, SyntaxType::LPARENT, SyntaxType::PLUS, SyntaxType::FORTK,
             SyntaxType::MINU, SyntaxType::NOT, SyntaxType::INTCON
     };
 

@@ -182,6 +182,7 @@ private:
             case StmtType::RETURN: visitReturnStmt(node); break;
             case StmtType::WHILE: visitWhileStmt(node); break;
             case StmtType::SEMICN: visitSemicnStmt(node); break;
+            case StmtType::FOR: visitForStmt(node); break;
             default: error(); break;
         }
     }
@@ -457,6 +458,43 @@ private:
             new ReturnInstr(curBasicBlock, exp,
                             curFunction->getIdent() == ReservedWordMapReversed.at(SyntaxType::MAINTK));
         }
+    }
+
+    void visitForStmt(StmtNode* node) {
+        curLoop = new Loop(curLoop);
+        curLoop->setFunction(curFunction);
+        auto* condBlock = new BasicBlock();
+        curFunction->addBasicBlock(condBlock);
+        visitStmt(node->getStmts().front());
+        new BrInstr(curBasicBlock, condBlock);
+        auto* forBasicBlock = new BasicBlock();
+        curFunction->addBasicBlock(forBasicBlock);
+        curLoop->addBasicBlock(forBasicBlock);
+        auto* endBasicBlock = new BasicBlock();
+        curFunction->addBasicBlock(endBasicBlock);
+        curLoop->addBasicBlock(endBasicBlock);
+        curBasicBlock = condBlock;
+        inCond = true;
+        Value* cond = visitCond(node->getCond(), forBasicBlock, endBasicBlock);
+        new BrInstr(curBasicBlock, cond, forBasicBlock, endBasicBlock);
+        curBasicBlock = forBasicBlock;
+        inCond = false;
+        loopHeads.push(condBlock);
+        loopFollows.push(endBasicBlock);
+        ++inLoop;
+        visitStmt(node->getStmts().at(2));
+        --inLoop;
+        loopHeads.pop();
+        loopFollows.pop();
+        auto* changeBlock = new BasicBlock();
+        curFunction->addBasicBlock(changeBlock);
+        curLoop->addBasicBlock(changeBlock);
+        new BrInstr(curBasicBlock, changeBlock);
+        curBasicBlock = changeBlock;
+        visitStmt(node->getStmts().at(1));
+        new BrInstr(curBasicBlock, condBlock);
+        curBasicBlock = endBasicBlock;
+        curLoop = curLoop->getParent();
     }
 
     void visitWhileStmt(StmtNode* node) {

@@ -14,6 +14,7 @@ private:
     vector<StmtNode *> stmts;
     string formatString;
     StmtType stmtType = StmtType::NONE;
+    vector<BlockItemNode*> blockItems;
 public:
     void insertList(vector<tuple<SyntaxType, string>>* parserList) override {
         parserList->emplace_back(SyntaxType::STMT, SyntaxType2String.at(SyntaxType::NONE));
@@ -43,6 +44,7 @@ public:
             case SyntaxType::EXP: exps.emplace_back(dynamic_cast<ExpNode *>(node)); stmtType = stmtType == StmtType::NONE ? StmtType::EXP : stmtType; break;
             case SyntaxType::SEMICN: stmtType = stmtType == StmtType::NONE ? StmtType::SEMICN : stmtType; break;
             case SyntaxType::STRCON: YASSERT(formatString.empty()) formatString = node->getVal(); break;
+            case SyntaxType::FORTK: stmtType = StmtType::FOR; break;
             default: break;
         }
     }
@@ -57,6 +59,10 @@ public:
 
     BlockNode* getBlock() {
         return dynamic_cast<BlockNode *>(block);
+    }
+
+    vector<BlockItemNode*> getBlockItems() {
+        return blockItems;
     }
 
     vector<StmtNode*> getStmts() {
